@@ -20,8 +20,8 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.flow.Flow
 
-import kotlinx.coroutines.flow.stateIn
 
 class SolicitudViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -187,6 +187,13 @@ class SolicitudViewModel(application: Application) :
     fun limpiarFormulario() {
         _estado.value = SolicitudUiState()
         _errorGuardado.value = null
+    }
+
+    // Obtener el detalle de una solicitud por su ID
+    fun obtenerSolicitudPorId(
+        id: Long
+    ): Flow<SolicitudEntity?> {
+        return repository.obtenerSolicitudPorId(id)
     }
 }
 

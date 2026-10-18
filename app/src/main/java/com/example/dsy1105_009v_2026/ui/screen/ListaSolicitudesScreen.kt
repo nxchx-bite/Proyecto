@@ -12,7 +12,8 @@ import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 @Composable
 fun ListaSolicitudesScreen(
     viewModel: SolicitudViewModel,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    onVerDetalle: (Long) -> Unit
 ) {
     // Obtener la lista desde el ViewModel
     val solicitudes by viewModel.solicitudes.collectAsState()
@@ -56,11 +57,16 @@ fun ListaSolicitudesScreen(
                     key = { it.id }
                 ) { solicitud ->
 
+
                     ElevatedCard(
+                        onClick = {
+                            onVerDetalle(solicitud.id)
+                        },
                         modifier = Modifier.fillMaxWidth()
                     ) {
 
-                        Column(
+
+                    Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement =
                                 Arrangement.spacedBy(8.dp)

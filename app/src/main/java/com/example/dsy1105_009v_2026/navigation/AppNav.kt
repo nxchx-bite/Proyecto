@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
+import com.example.dsy1105_009v_2026.ui.screen.DetalleSolicitudScreen
 
 
 
@@ -130,11 +131,39 @@ fun AppNav() {
 
             ListaSolicitudesScreen(
                 viewModel = solicitudViewModel,
+
+                onVolver = {
+                    navController.popBackStack()
+                },
+
+                onVerDetalle = { id ->
+                    navController.navigate("detalleSolicitud/$id")
+                }
+            )
+        }
+
+
+        composable(
+            route = "detalleSolicitud/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments
+                ?.getLong("id") ?: 0L
+
+            DetalleSolicitudScreen(
+                solicitudId = id,
+                viewModel = solicitudViewModel,
                 onVolver = {
                     navController.popBackStack()
                 }
             )
         }
+
 
 
     }
