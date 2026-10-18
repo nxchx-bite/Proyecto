@@ -13,6 +13,7 @@ import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
 import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
+import com.example.dsy1105_009v_2026.ui.screen.ResumenSolicitudScreen
 
 @Composable
 fun AppNav() {
@@ -53,15 +54,27 @@ fun AppNav() {
         }
 
         // Formulario de nueva solicitud
+
         composable("nuevaSolicitud") {
 
             NuevaSolicitudScreen(
                 viewModel = solicitudViewModel,
                 onSolicitudValida = {
-                    // La pantalla de resumen se agregara
-                    // en el siguiente commit.
+                    navController.navigate("resumenSolicitud")
                 }
             )
         }
+
+        composable("resumenSolicitud") {
+
+            ResumenSolicitudScreen(
+                viewModel = solicitudViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+
     }
 }
