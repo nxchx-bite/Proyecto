@@ -1,46 +1,67 @@
+
 package com.example.dsy1105_009v_2026.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
-
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.dsy1105_009v_2026.ui.home.MuestraDatosScreen
+
 import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
+import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
+import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
 @Composable
-fun AppNav(){
+fun AppNav() {
+
     val navController = rememberNavController()
 
-    NavHost(navController=navController, startDestination="login") {
+    // ViewModel compartido entre pantallas
+    val solicitudViewModel: SolicitudViewModel = viewModel()
 
+    NavHost(
+        navController = navController,
+        startDestination = "login"
+    ) {
+
+        // Pantalla de inicio de sesion
         composable("login") {
             HomeScreen(navController = navController)
-        } //fin composable
+        }
 
+        // Menu principal
         composable(
-         //   route="muestraDatos/{username}",
-            route="DrawerMenu/{username}",
+            route = "DrawerMenu/{username}",
             arguments = listOf(
-                navArgument("username"){
-                    type= NavType.StringType
-                }//fin ListOf
+                navArgument("username") {
+                    type = NavType.StringType
+                }
             )
-        )//fin composable
+        ) { backStackEntry ->
 
-        { // inicio back
-            backStackEntry ->
-            val username=backStackEntry.arguments?.getString("username").orEmpty()
-           // MuestraDatosScreen(username=username,navController=navController)
-            DrawerMenu(username=username,navController=navController)
+            val username = backStackEntry.arguments
+                ?.getString("username")
+                .orEmpty()
 
-        }//fin back
+            DrawerMenu(
+                username = username,
+                navController = navController
+            )
+        }
 
+        // Formulario de nueva solicitud
+        composable("nuevaSolicitud") {
 
-    }//Fin NavHost
-
-}// fin AppNav
+            NuevaSolicitudScreen(
+                viewModel = solicitudViewModel,
+                onSolicitudValida = {
+                    // La pantalla de resumen se agregara
+                    // en el siguiente commit.
+                }
+            )
+        }
+    }
+}
