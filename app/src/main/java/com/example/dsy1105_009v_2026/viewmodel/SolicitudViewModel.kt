@@ -1,22 +1,51 @@
 
+
 package com.example.dsy1105_009v_2026.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.dsy1105_009v_2026.model.SolicitudErrores
 import com.example.dsy1105_009v_2026.model.SolicitudUiState
+import com.example.dsy1105_009v_2026.model.data.local.SolicitudDatabase
+import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
+import com.example.dsy1105_009v_2026.repository.SolicitudRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
-class SolicitudViewModel : ViewModel() {
+class SolicitudViewModel(application: Application) :
+    AndroidViewModel(application) {
 
-    // Estado interno del formulario
+    // Conectar el ViewModel con Room
+    private val database =
+        SolicitudDatabase.getDatabase(application)
+
+    private val repository =
+        SolicitudRepository(database.solicitudDao())
+
+    // Estado del formulario
     private val _estado = MutableStateFlow(SolicitudUiState())
 
-    // Estado que observara la interfaz
     val estado: StateFlow<SolicitudUiState> =
         _estado.asStateFlow()
+
+    // Estado del guardado
+    private val _guardando = MutableStateFlow(false)
+
+    val guardando: StateFlow<Boolean> =
+        _guardando.asStateFlow()
+
+    // Mensaje en caso de error al guardar
+    private val _errorGuardado = MutableStateFlow<String?>(null)
+
+    val errorGuardado: StateFlow<String?> =
+        _errorGuardado.asStateFlow()
 
     // Actualizar el titulo
     fun onTituloChange(valor: String) {
@@ -48,14 +77,14 @@ class SolicitudViewModel : ViewModel() {
         }
     }
 
-    // Actualizar la imagen seleccionada o capturada
+    // Actualizar la evidencia
     fun onEvidenciaChange(uri: String?) {
         _estado.update {
             it.copy(evidenciaUri = uri)
         }
     }
 
-    // Validar los datos antes de registrar
+    // Validar el formulario
     fun validarFormulario(): Boolean {
 
         val datos = _estado.value
@@ -64,16 +93,20 @@ class SolicitudViewModel : ViewModel() {
             titulo = when {
                 datos.titulo.isBlank() ->
                     "El titulo es obligatorio"
+
                 datos.titulo.trim().length < 5 ->
                     "El titulo debe tener al menos 5 caracteres"
+
                 else -> null
             },
 
             descripcion = when {
                 datos.descripcion.isBlank() ->
                     "La descripcion es obligatoria"
+
                 datos.descripcion.trim().length < 10 ->
                     "La descripcion debe tener al menos 10 caracteres"
+
                 else -> null
             },
 
@@ -93,10 +126,55 @@ class SolicitudViewModel : ViewModel() {
                 errores.categoria == null
     }
 
-    // Limpiar el formulario
+    // Guardar solicitud en Room
+    fun guardarSolicitud(onGuardado: (Long) -> Unit) {
+
+        if (_guardando.value || !validarFormulario()) {
+            return
+        }
+
+        _guardando.value = true
+        _errorGuardado.value = null
+
+        viewModelScope.launch {
+
+            try {
+                val datos = _estado.value
+
+                // Generar fecha y hora de creacion
+                val fecha = SimpleDateFormat(
+                    "dd/MM/yyyy HH:mm",
+                    Locale.getDefault()
+                ).format(Date())
+
+                // Crear la entidad para Room
+                val solicitud = SolicitudEntity(
+                    titulo = datos.titulo.trim(),
+                    descripcion = datos.descripcion.trim(),
+                    categoria = datos.categoria,
+                    estado = "Recibida",
+                    fechaCreacion = fecha,
+                    evidenciaUri = datos.evidenciaUri
+                )
+
+                // Guardar y obtener el ID generado
+                val id = repository.guardarSolicitud(solicitud)
+
+                onGuardado(id)
+
+            } catch (e: Exception) {
+                _errorGuardado.value =
+                    "No se pudo guardar la solicitud"
+            } finally {
+                _guardando.value = false
+            }
+        }
+    }
+
+    // Limpiar formulario
     fun limpiarFormulario() {
         _estado.value = SolicitudUiState()
+        _errorGuardado.value = null
     }
 }
-
 
