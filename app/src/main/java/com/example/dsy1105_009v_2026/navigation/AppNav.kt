@@ -16,6 +16,17 @@ import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 import com.example.dsy1105_009v_2026.ui.screen.ResumenSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.SolicitudConfirmadaScreen
 
+
+import androidx.lifecycle.viewModelScope
+import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+
+import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
+
+
+
 @Composable
 fun AppNav() {
 
@@ -23,6 +34,7 @@ fun AppNav() {
 
     // ViewModel compartido entre pantallas
     val solicitudViewModel: SolicitudViewModel = viewModel()
+
 
     NavHost(
         navController = navController,
@@ -113,6 +125,16 @@ fun AppNav() {
             )
         }
 
+
+        composable("misSolicitudes") {
+
+            ListaSolicitudesScreen(
+                viewModel = solicitudViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
 
 
     }

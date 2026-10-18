@@ -62,10 +62,13 @@ fun DrawerMenu(
             }
         )
 
+
         NavigationDrawerItem(
-            label = { Text("Mis solicitudes (proximamente)") },
+            label = { Text("Mis solicitudes") },
             selected = false,
-            onClick = {},
+            onClick = {
+                navController.navigate("misSolicitudes")
+            },
             icon = {
                 Icon(
                     Icons.Default.List,
@@ -73,5 +76,6 @@ fun DrawerMenu(
                 )
             }
         )
+
     }
 }

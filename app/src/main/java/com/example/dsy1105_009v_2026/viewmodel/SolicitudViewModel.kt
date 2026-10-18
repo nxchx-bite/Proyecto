@@ -11,13 +11,17 @@ import com.example.dsy1105_009v_2026.model.data.local.SolicitudDatabase
 import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
 import com.example.dsy1105_009v_2026.repository.SolicitudRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+import kotlinx.coroutines.flow.stateIn
 
 class SolicitudViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -28,6 +32,14 @@ class SolicitudViewModel(application: Application) :
 
     private val repository =
         SolicitudRepository(database.solicitudDao())
+
+    // Observar todas las solicitudes almacenadas en Room
+    val solicitudes: StateFlow<List<SolicitudEntity>> =
+        repository.obtenerSolicitudes().stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     // Estado del formulario
     private val _estado = MutableStateFlow(SolicitudUiState())
