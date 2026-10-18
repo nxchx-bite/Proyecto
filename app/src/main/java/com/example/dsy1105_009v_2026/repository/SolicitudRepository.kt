@@ -26,4 +26,22 @@ class SolicitudRepository(
     ): Flow<SolicitudEntity?> {
         return solicitudDao.obtenerPorId(id)
     }
+
+
+
+    // Actualizar una solicitud en Room
+    suspend fun actualizarSolicitud(
+        id: Long,
+        titulo: String,
+        descripcion: String,
+        categoria: String
+    ): Int {
+        return solicitudDao.actualizarSolicitud(
+            id = id,
+            titulo = titulo,
+            descripcion = descripcion,
+            categoria = categoria
+        )
+    }
+
 }

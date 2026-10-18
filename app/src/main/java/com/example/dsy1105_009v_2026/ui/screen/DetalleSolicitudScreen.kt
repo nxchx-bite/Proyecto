@@ -13,7 +13,8 @@ import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 fun DetalleSolicitudScreen(
     solicitudId: Long,
     viewModel: SolicitudViewModel,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    onEditar: () -> Unit
 ) {
     val flujoSolicitud = remember(solicitudId, viewModel) {
         viewModel.obtenerSolicitudPorId(solicitudId)
@@ -86,6 +87,26 @@ fun DetalleSolicitudScreen(
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.fechaCreacion)
+
+            Text(
+                text = "Fecha de creacion",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(datos.fechaCreacion)
+
+            // Boton para editar solicitudes recibidas
+            if (datos.estado == "Recibida") {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = onEditar,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Editar solicitud")
+                }
+            }
+
         }
     }
 }

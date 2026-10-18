@@ -10,23 +10,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 
 import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
-import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
+
+import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.ResumenSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.SolicitudConfirmadaScreen
-
-
-import androidx.lifecycle.viewModelScope
-import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-
 import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
 import com.example.dsy1105_009v_2026.ui.screen.DetalleSolicitudScreen
-
-
+import com.example.dsy1105_009v_2026.ui.screen.EditarSolicitudScreen
 
 @Composable
 fun AppNav() {
@@ -36,18 +28,17 @@ fun AppNav() {
     // ViewModel compartido entre pantallas
     val solicitudViewModel: SolicitudViewModel = viewModel()
 
-
     NavHost(
         navController = navController,
         startDestination = "login"
     ) {
 
-        // Pantalla de inicio de sesion
+        // 1. LOGIN
         composable("login") {
             HomeScreen(navController = navController)
         }
 
-        // Menu principal
+        // 2. MENU PRINCIPAL
         composable(
             route = "DrawerMenu/{username}",
             arguments = listOf(
@@ -67,10 +58,8 @@ fun AppNav() {
             )
         }
 
-        // Formulario de nueva solicitud
-
+        // 3. NUEVA SOLICITUD
         composable("nuevaSolicitud") {
-
             NuevaSolicitudScreen(
                 viewModel = solicitudViewModel,
                 onSolicitudValida = {
@@ -79,9 +68,8 @@ fun AppNav() {
             )
         }
 
-
+        // 4. RESUMEN DE SOLICITUD
         composable("resumenSolicitud") {
-
             ResumenSolicitudScreen(
                 viewModel = solicitudViewModel,
 
@@ -90,7 +78,6 @@ fun AppNav() {
                 },
 
                 onSolicitudGuardada = { id ->
-
                     navController.navigate(
                         "solicitudConfirmada/$id"
                     ) {
@@ -102,7 +89,7 @@ fun AppNav() {
             )
         }
 
-
+        // 5. SOLICITUD CONFIRMADA
         composable(
             route = "solicitudConfirmada/{id}",
             arguments = listOf(
@@ -117,18 +104,16 @@ fun AppNav() {
 
             SolicitudConfirmadaScreen(
                 solicitudId = id,
+
                 onVolverInicio = {
-
                     solicitudViewModel.limpiarFormulario()
-
                     navController.popBackStack()
                 }
             )
         }
 
-
+        // 6. LISTA DE SOLICITUDES
         composable("misSolicitudes") {
-
             ListaSolicitudesScreen(
                 viewModel = solicitudViewModel,
 
@@ -137,12 +122,14 @@ fun AppNav() {
                 },
 
                 onVerDetalle = { id ->
-                    navController.navigate("detalleSolicitud/$id")
+                    navController.navigate(
+                        "detalleSolicitud/$id"
+                    )
                 }
             )
         }
 
-
+        // 7. DETALLE DE SOLICITUD
         composable(
             route = "detalleSolicitud/{id}",
             arguments = listOf(
@@ -158,13 +145,45 @@ fun AppNav() {
             DetalleSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
+
                 onVolver = {
                     navController.popBackStack()
+                },
+
+                onEditar = {
+                    navController.navigate(
+                        "editarSolicitud/$id"
+                    )
                 }
             )
         }
 
+        // 8. EDITAR SOLICITUD - NUEVO
+        composable(
+            route = "editarSolicitud/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
 
+            val id = backStackEntry.arguments
+                ?.getLong("id") ?: 0L
 
+            EditarSolicitudScreen(
+                solicitudId = id,
+                viewModel = solicitudViewModel,
+
+                onVolver = {
+                    navController.popBackStack()
+                },
+
+                onActualizado = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
+

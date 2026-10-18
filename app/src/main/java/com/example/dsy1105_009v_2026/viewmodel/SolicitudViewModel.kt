@@ -41,6 +41,7 @@ class SolicitudViewModel(application: Application) :
             initialValue = emptyList()
         )
 
+
     // Estado del formulario
     private val _estado = MutableStateFlow(SolicitudUiState())
 
@@ -195,5 +196,82 @@ class SolicitudViewModel(application: Application) :
     ): Flow<SolicitudEntity?> {
         return repository.obtenerSolicitudPorId(id)
     }
+
+    // Validar los datos editados
+    fun validarEdicion(
+        titulo: String,
+        descripcion: String,
+        categoria: String
+    ): SolicitudErrores {
+
+        return SolicitudErrores(
+            titulo = when {
+                titulo.isBlank() ->
+                    "El titulo es obligatorio"
+                titulo.trim().length < 5 ->
+                    "El titulo debe tener al menos 5 caracteres"
+                else -> null
+            },
+
+            descripcion = when {
+                descripcion.isBlank() ->
+                    "La descripcion es obligatoria"
+                descripcion.trim().length < 10 ->
+                    "La descripcion debe tener al menos 10 caracteres"
+                else -> null
+            },
+
+            categoria = if (categoria.isBlank()) {
+                "Debes seleccionar una categoria"
+            } else {
+                null
+            }
+        )
+    }
+
+    // Actualizar solicitud utilizando el Repository
+    fun actualizarSolicitud(
+        id: Long,
+        titulo: String,
+        descripcion: String,
+        categoria: String,
+        onResultado: (String?) -> Unit
+    ) {
+        val errores = validarEdicion(
+            titulo, descripcion, categoria
+        )
+
+        if (
+            errores.titulo != null ||
+            errores.descripcion != null ||
+            errores.categoria != null
+        ) {
+            onResultado("Revisa los datos del formulario")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val filas = repository.actualizarSolicitud(
+                    id = id,
+                    titulo = titulo.trim(),
+                    descripcion = descripcion.trim(),
+                    categoria = categoria
+                )
+
+                if (filas > 0) {
+                    onResultado(null)
+                } else {
+                    onResultado(
+                        "La solicitud no existe o ya no se puede editar"
+                    )
+                }
+
+            } catch (e: Exception) {
+                onResultado("No se pudo actualizar la solicitud")
+            }
+        }
+    }
+
 }
 
