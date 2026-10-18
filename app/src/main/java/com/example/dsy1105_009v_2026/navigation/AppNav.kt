@@ -14,6 +14,7 @@ import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 import com.example.dsy1105_009v_2026.ui.screen.ResumenSolicitudScreen
+import com.example.dsy1105_009v_2026.ui.screen.SolicitudConfirmadaScreen
 
 @Composable
 fun AppNav() {
@@ -65,15 +66,53 @@ fun AppNav() {
             )
         }
 
+
         composable("resumenSolicitud") {
 
             ResumenSolicitudScreen(
                 viewModel = solicitudViewModel,
+
                 onVolver = {
+                    navController.popBackStack()
+                },
+
+                onSolicitudGuardada = { id ->
+
+                    navController.navigate(
+                        "solicitudConfirmada/$id"
+                    ) {
+                        popUpTo("nuevaSolicitud") {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
+
+        composable(
+            route = "solicitudConfirmada/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments
+                ?.getLong("id") ?: 0L
+
+            SolicitudConfirmadaScreen(
+                solicitudId = id,
+                onVolverInicio = {
+
+                    solicitudViewModel.limpiarFormulario()
+
                     navController.popBackStack()
                 }
             )
         }
+
 
 
     }

@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -12,11 +13,16 @@ import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 @Composable
 fun ResumenSolicitudScreen(
     viewModel: SolicitudViewModel,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    onSolicitudGuardada: (Long) -> Unit
 ) {
 
-    // Observar los datos del ViewModel
+    // Observar datos del formulario
     val estado by viewModel.estado.collectAsState()
+
+    // Observar estado del guardado
+    val guardando by viewModel.guardando.collectAsState()
+    val errorGuardado by viewModel.errorGuardado.collectAsState()
 
     Column(
         modifier = Modifier
@@ -32,8 +38,7 @@ fun ResumenSolicitudScreen(
         )
 
         Text(
-            text = "Revisa los datos antes de registrar tu solicitud.",
-            style = MaterialTheme.typography.bodyMedium
+            text = "Revisa los datos antes de registrar tu solicitud."
         )
 
         HorizontalDivider()
@@ -42,7 +47,6 @@ fun ResumenSolicitudScreen(
             text = "Titulo",
             style = MaterialTheme.typography.titleMedium
         )
-
         Text(text = estado.titulo)
 
         HorizontalDivider()
@@ -51,7 +55,6 @@ fun ResumenSolicitudScreen(
             text = "Descripcion",
             style = MaterialTheme.typography.titleMedium
         )
-
         Text(text = estado.descripcion)
 
         HorizontalDivider()
@@ -60,7 +63,6 @@ fun ResumenSolicitudScreen(
             text = "Categoria",
             style = MaterialTheme.typography.titleMedium
         )
-
         Text(text = estado.categoria)
 
         HorizontalDivider()
@@ -70,15 +72,43 @@ fun ResumenSolicitudScreen(
             style = MaterialTheme.typography.bodyLarge
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        // Mostrar errores de almacenamiento
+        errorGuardado?.let { error ->
+            Text(
+                text = error,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
+        // Indicador de carga
+        if (guardando) {
+            LinearProgressIndicator(
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Guardar la solicitud
         Button(
+            onClick = {
+                viewModel.guardarSolicitud { id ->
+                    onSolicitudGuardada(id)
+                }
+            },
+            enabled = !guardando,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (guardando) "Guardando..."
+                else "Registrar solicitud"
+            )
+        }
+
+        OutlinedButton(
             onClick = onVolver,
+            enabled = !guardando,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Volver y editar")
         }
     }
 }
-
-
