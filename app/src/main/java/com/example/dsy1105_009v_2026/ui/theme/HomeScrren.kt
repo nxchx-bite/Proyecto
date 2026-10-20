@@ -59,6 +59,8 @@ fun HomeScreen(
         onSurface = Color(0xFF333333), //gris
     )
 
+
+
     MaterialTheme(
         colorScheme = ColorScheme
     ){ // Inicio aplicacion Material
@@ -66,17 +68,17 @@ fun HomeScreen(
 
 
 
-// Scaffold: permite generar una pantalla basica
+ //Scaffold: permite generar una pantalla basica
     Scaffold (
         topBar={
-            TopAppBar(title={ Text("Mi Primer App",
+            TopAppBar(title={ Text("Gestión móvil y seguimiento de solicitudes de clientes",
                 color= MaterialTheme.colorScheme.onPrimary
             )})
         }// fin topBar
 
 
     ){ innerPadding ->
-        //innerPadding  es un espacio interno que entrega Scaffold
+       // innerPadding  es un espacio interno que entrega Scaffold
         Column(
             modifier= Modifier
                 .padding(innerPadding)
@@ -88,7 +90,7 @@ fun HomeScreen(
 
 
         ){  //inicio inner
-            Text(text="!!!  Bienvenido !!!!!!",
+            Text(text="!!!  Bienvenido Usuario!!!!!!",
                 style= MaterialTheme.typography.headlineMedium,
                 color=MaterialTheme.colorScheme.primary
                 )
@@ -96,8 +98,12 @@ fun HomeScreen(
             Spacer(modifier= Modifier.height(16.dp)
             )
 
+
+
+
+
             Image(
-                painter= painterResource(id= R.drawable.logoduoc),
+                painter= painterResource(id= R.drawable.logo),
                 contentDescription = "Logo Appp",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,7 +120,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
             ){// Aplicar fila
 
-                Text("Texto uno",
+                Text("Ingrese su usuario",
                     style= MaterialTheme.typography.bodyLarge.copy(
                         color= MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f),
                         fontWeight = FontWeight.Bold),
@@ -124,14 +130,7 @@ fun HomeScreen(
                     )//fin Text1
 
 
-                Text("Texto dos",
-                    style= MaterialTheme.typography.bodyLarge.copy(
-                        color= MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f),
-                        fontWeight = FontWeight.Bold),
-                    modifier= Modifier
-                        .padding(end=8.dp)
 
-                )//fin Text1
 
 
             }// fin Aplicar fila
@@ -144,6 +143,17 @@ fun HomeScreen(
                 singleLine = true,
                 modifier= Modifier.fillMaxWidth(0.95f)
             ) // fin user
+
+
+            Text("Ingrese su Contraseña",
+                style= MaterialTheme.typography.bodyLarge.copy(
+                    color= MaterialTheme.colorScheme.onSurface.copy(alpha=0.8f),
+                    fontWeight = FontWeight.Bold),
+                modifier= Modifier
+                    .padding(end=8.dp)
+                    .fillMaxWidth(0.95f)
+
+            )//fin Text1
 
 
 

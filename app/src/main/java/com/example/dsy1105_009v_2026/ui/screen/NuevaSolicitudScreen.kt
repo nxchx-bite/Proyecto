@@ -1,12 +1,17 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
@@ -15,12 +20,16 @@ fun NuevaSolicitudScreen(
     viewModel: SolicitudViewModel,
     onSolicitudValida: () -> Unit
 ) {
-    // Observar los datos del ViewModel
     val estado by viewModel.estado.collectAsState()
 
-    // Controlar la apertura del menu de categorias
-    var menuExpandido by remember {
-        mutableStateOf(false)
+    var menuExpandido by remember { mutableStateOf(false) }
+    var fotoEvidencia by remember { mutableStateOf<Bitmap?>(null) }
+
+    // Abrir la cámara y recibir la fotografía
+    val abrirCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        fotoEvidencia = bitmap
     }
 
     val categorias = listOf(
@@ -40,7 +49,6 @@ fun NuevaSolicitudScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         Text(
             text = "Nueva solicitud",
             style = MaterialTheme.typography.headlineMedium
@@ -55,7 +63,7 @@ fun NuevaSolicitudScreen(
         OutlinedTextField(
             value = estado.titulo,
             onValueChange = viewModel::onTituloChange,
-            label = { Text("Titulo de la solicitud") },
+            label = { Text("Título de la solicitud") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = estado.errores.titulo != null,
@@ -70,7 +78,7 @@ fun NuevaSolicitudScreen(
         OutlinedTextField(
             value = estado.descripcion,
             onValueChange = viewModel::onDescripcionChange,
-            label = { Text("Descripcion del problema") },
+            label = { Text("Descripción del problema") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             maxLines = 5,
@@ -84,7 +92,7 @@ fun NuevaSolicitudScreen(
 
         // CATEGORIA
         Text(
-            text = "Categoria",
+            text = "Categoría",
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -94,10 +102,11 @@ fun NuevaSolicitudScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    if (estado.categoria.isBlank())
-                        "Seleccionar categoria"
-                    else
+                    if (estado.categoria.isBlank()) {
+                        "Seleccionar categoría"
+                    } else {
                         estado.categoria
+                    }
                 )
             }
 
@@ -122,6 +131,49 @@ fun NuevaSolicitudScreen(
                 text = it,
                 color = MaterialTheme.colorScheme.error
             )
+        }
+
+        HorizontalDivider()
+
+        // FOTO DE EVIDENCIA
+        Text(
+            text = "Fotografía de evidencia",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        Text(
+            text = "Puedes fotografiar el problema para ayudar a explicar tu solicitud."
+        )
+
+        Button(
+            onClick = { abrirCamara.launch(null) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (fotoEvidencia == null) {
+                    "Tomar fotografía"
+                } else {
+                    "Tomar otra fotografía"
+                }
+            )
+        }
+
+        // MOSTRAR LA FOTO CAPTURADA
+        fotoEvidencia?.let { bitmap ->
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = "Fotografía de evidencia",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 260.dp)
+            )
+
+            OutlinedButton(
+                onClick = { fotoEvidencia = null },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Eliminar fotografía")
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
