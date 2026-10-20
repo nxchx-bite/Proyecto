@@ -1,5 +1,6 @@
 package com.example.dsy1105_009v_2026.ui.theme
 
+import android.R.attr.enabled
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -185,23 +186,25 @@ fun HomeScreen(
 
             Spacer(modifier= Modifier.height(16.dp))
 
-            Button(onClick={/*  accion futura */
-            vm.submit{ user->
-                navController.navigate("DrawerMenu/$user")
-                { //inicio navegacion
-                popUpTo("login") {inclusive=true} // no va a volver al login con back
-                launchSingleTop=true
-                } //termino navegacion
-
-            }// fin submit
-
-            },
-                enabled=!state.isLoading,
-                modifier= Modifier.fillMaxWidth(0.8f)
-            ){
-               // Text("Presioname")
-                Text( if(state.isLoading) "Validadndo" else "iniciar sesion"  )
-            }// fin text
+            Button(
+                onClick = {
+                    vm.submit { user, role ->
+                        navController.navigate("DrawerMenu/$user/$role") {
+                            popUpTo("login") {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+                    }
+                },
+                enabled = !state.isLoading,
+                modifier = Modifier.fillMaxWidth(0.8f)
+            ) {
+                Text(
+                    if (state.isLoading) "Validando..."
+                    else "Iniciar sesión"
+                )
+            }
 
 
 

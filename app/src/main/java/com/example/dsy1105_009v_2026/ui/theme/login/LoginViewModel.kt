@@ -22,18 +22,29 @@ class LoginViewModel (
     }
 
 
-    fun submit(onSuccess:(String) -> Unit) {
-        uiState=uiState.copy(isLoading = true, error =null)
 
-        val ok=repo.login(uiState.username.trim(), uiState.password)
 
-        uiState=uiState.copy(isLoading  =false)
+    fun submit(onSuccess: (String, String) -> Unit) {
+        uiState = uiState.copy(
+            isLoading = true,
+            error = null
+        )
 
-        if (ok) onSuccess(uiState.username.trim())
-        else uiState=uiState.copy(error="Credenciales invalidas")
+        val credential = repo.login(
+            uiState.username.trim(),
+            uiState.password
+        )
 
+        uiState = uiState.copy(isLoading = false)
+
+        if (credential != null) {
+            onSuccess(credential.username, credential.role)
+        } else {
+            uiState = uiState.copy(
+                error = "Credenciales inválidas"
+            )
+        }
     }
-
 
 
 

@@ -40,9 +40,12 @@ fun AppNav() {
 
         // 2. MENU PRINCIPAL
         composable(
-            route = "DrawerMenu/{username}",
+            route = "DrawerMenu/{username}/{role}",
             arguments = listOf(
                 navArgument("username") {
+                    type = NavType.StringType
+                },
+                navArgument("role") {
                     type = NavType.StringType
                 }
             )
@@ -52,8 +55,13 @@ fun AppNav() {
                 ?.getString("username")
                 .orEmpty()
 
+            val role = backStackEntry.arguments
+                ?.getString("role")
+                .orEmpty()
+
             DrawerMenu(
                 username = username,
+                role = role,
                 navController = navController
             )
         }
