@@ -71,11 +71,12 @@ fun DrawerMenu(
                 }
             )
 
+
             NavigationDrawerItem(
                 label = { Text("Mis solicitudes") },
                 selected = false,
                 onClick = {
-                    navController.navigate("gestionarSolicitudes")
+                    navController.navigate("misSolicitudes")
                 },
                 icon = {
                     Icon(
@@ -84,6 +85,7 @@ fun DrawerMenu(
                     )
                 }
             )
+
         }
 
         if (role == "ADMIN") {

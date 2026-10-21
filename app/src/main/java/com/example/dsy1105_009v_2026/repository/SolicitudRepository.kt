@@ -44,15 +44,19 @@ class SolicitudRepository(
     }
 
     // Cambiar el estado de una solicitud
+
     suspend fun actualizarEstado(
         id: Long,
+        estadoAnterior: String,
         nuevoEstado: String
     ): Int {
         return solicitudDao.actualizarEstado(
             id = id,
+            estadoAnterior = estadoAnterior,
             nuevoEstado = nuevoEstado
         )
     }
+
 
     // Cambiar la prioridad
     suspend fun actualizarPrioridad(

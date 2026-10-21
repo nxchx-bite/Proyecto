@@ -37,15 +37,19 @@ interface SolicitudDao {
     ): Int
 
     // Cambiar el estado de una solicitud
+
     @Query("""
         UPDATE solicitudes
         SET estado = :nuevoEstado
         WHERE id = :id
+          AND estado = :estadoAnterior
     """)
     suspend fun actualizarEstado(
         id: Long,
+        estadoAnterior: String,
         nuevoEstado: String
     ): Int
+
 
     // Cambiar la prioridad de una solicitud
     @Query("""

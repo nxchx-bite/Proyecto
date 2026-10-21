@@ -18,6 +18,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+import com.example.dsy1105_009v_2026.model.EstadoSolicitud
+import kotlinx.coroutines.flow.first
+
 class SolicitudViewModel(application: Application) :
     AndroidViewModel(application) {
 
@@ -43,47 +46,80 @@ class SolicitudViewModel(application: Application) :
             initialValue = emptyList()
         )
 
+
     fun cambiarEstado(
         id: Long,
         nuevoEstado: String,
         onResultado: (String?) -> Unit
     ) {
-        val estadosPermitidos = listOf(
-            "Recibida",
-            "En revisión",
-            "Pendiente de información",
-            "Asignada",
-            "En proceso",
-            "Resuelta",
-            "Cerrada",
-            "Cancelada"
+        val destino = EstadoSolicitud.desdeDescripcion(
+            nuevoEstado
         )
 
-        if (nuevoEstado !in estadosPermitidos) {
+        if (destino == null) {
             onResultado("El estado seleccionado no es válido")
             return
         }
 
         viewModelScope.launch {
             try {
-                val filas =
-                    repository.actualizarEstado(id, nuevoEstado)
+                // Consultar el estado actual desde Room
+                val solicitud = repository
+                    .obtenerSolicitudPorId(id)
+                    .first()
 
-                val solicitudes = repository.obtenerSolicitudes().stateIn(
-                    scope = viewModelScope,
-                    started = SharingStarted.WhileSubscribed(5000),
-                    initialValue = emptyList()
+                if (solicitud == null) {
+                    onResultado("No se encontró la solicitud")
+                    return@launch
+                }
+
+                val actual = EstadoSolicitud.desdeDescripcion(
+                    solicitud.estado
                 )
+
+                if (actual == null) {
+                    onResultado("El estado actual no es válido")
+                    return@launch
+                }
+
+                // Si no cambió, no necesitamos actualizar Room
+                if (actual == destino) {
+                    onResultado(null)
+                    return@launch
+                }
+
+                // Validar la transición
+                if (destino !in actual.siguientesEstados()) {
+                    onResultado(
+                        "No se permite pasar de " +
+                                "${actual.descripcion} a " +
+                                destino.descripcion
+                    )
+                    return@launch
+                }
+
+                // Guardar el cambio en Room
+                val filas = repository.actualizarEstado(
+                    id = id,
+                    estadoAnterior = actual.descripcion,
+                    nuevoEstado = destino.descripcion
+                )
+
                 if (filas > 0) {
                     onResultado(null)
                 } else {
-                    onResultado("No se encontró la solicitud")
+                    onResultado(
+                        "El estado cambió mientras editabas. " +
+                                "Vuelve a revisar la solicitud."
+                    )
                 }
+
             } catch (e: Exception) {
                 onResultado("No se pudo cambiar el estado")
             }
         }
     }
+
 
     fun obtenerSolicitudPorId(
         id: Long

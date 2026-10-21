@@ -1,4 +1,3 @@
-
 package com.example.dsy1105_009v_2026
 
 import androidx.compose.runtime.Composable
@@ -16,6 +15,10 @@ import com.example.dsy1105_009v_2026.ui.screen.GestionSolicitudesScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
+
+import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
+import com.example.dsy1105_009v_2026.ui.screen.DetalleSolicitudScreen
+import com.example.dsy1105_009v_2026.ui.screen.EditarSolicitudScreen
 
 @Composable
 fun AppNav() {
@@ -115,5 +118,72 @@ fun AppNav() {
                 }
             )
         }
+
+
+// MIS SOLICITUDES - CLIENTE
+        composable("misSolicitudes") {
+            ListaSolicitudesScreen(
+                viewModel = solicitudViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onVerDetalle = { id ->
+                    navController.navigate("detalleSolicitud/$id")
+                }
+            )
+        }
+
+// DETALLE DE SOLICITUD
+        composable(
+            route = "detalleSolicitud/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments
+                ?.getLong("id") ?: 0L
+
+            DetalleSolicitudScreen(
+                solicitudId = id,
+                viewModel = solicitudViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onEditar = {
+                    navController.navigate("editarSolicitud/$id")
+                }
+            )
+        }
+
+// EDITAR SOLICITUD
+        composable(
+            route = "editarSolicitud/{id}",
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+
+            val id = backStackEntry.arguments
+                ?.getLong("id") ?: 0L
+
+            EditarSolicitudScreen(
+                solicitudId = id,
+                viewModel = solicitudViewModel,
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onActualizado = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+
+
     }
 }
