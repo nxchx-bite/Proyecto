@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.model.data.local
 
 import androidx.room.Entity
@@ -13,5 +14,11 @@ data class SolicitudEntity(
     val categoria: String,
     val estado: String = "Recibida",
     val fechaCreacion: String,
-    val evidenciaUri: String? = null
+    val evidenciaUri: String? = null,
+
+    // Nuevos datos para la gestión administrativa
+    val prioridad: String = "Media",
+    val responsable: String? = null
+
+
 )

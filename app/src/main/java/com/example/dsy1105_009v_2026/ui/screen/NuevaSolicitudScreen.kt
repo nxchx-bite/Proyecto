@@ -1,6 +1,8 @@
 
 package com.example.dsy1105_009v_2026.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 import java.io.File
 import java.io.FileOutputStream
@@ -38,7 +41,7 @@ fun NuevaSolicitudScreen(
         mutableStateOf<String?>(null)
     }
 
-    // CAMARA
+    // CAMARA: TOMAR Y GUARDAR FOTOGRAFIA
     val abrirCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
@@ -82,7 +85,19 @@ fun NuevaSolicitudScreen(
         }
     }
 
-    // GALERIA
+    // PERMISO DE CAMARA
+    val solicitarPermisoCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { permisoConcedido ->
+
+        if (permisoConcedido) {
+            abrirCamara.launch(null)
+        } else {
+            errorEvidencia = "No se concedió permiso para la cámara"
+        }
+    }
+
+    // GALERIA: SELECCIONAR Y GUARDAR IMAGEN
     val abrirGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -132,7 +147,7 @@ fun NuevaSolicitudScreen(
         }
     }
 
-    // CATEGORIAS
+    // CATEGORIAS DISPONIBLES
     val categorias = listOf(
         "Desarrollo web",
         "Mantenimiento web",
@@ -165,14 +180,16 @@ fun NuevaSolicitudScreen(
         OutlinedTextField(
             value = estado.titulo,
             onValueChange = viewModel::onTituloChange,
-            label = { Text("Título de la solicitud") },
+            label = {
+                Text("Título de la solicitud")
+            },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             isError = estado.errores.titulo != null,
             supportingText = {
-                estado.errores.titulo?.let {
+                estado.errores.titulo?.let { mensaje ->
                     Text(
-                        it,
+                        text = mensaje,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -183,15 +200,17 @@ fun NuevaSolicitudScreen(
         OutlinedTextField(
             value = estado.descripcion,
             onValueChange = viewModel::onDescripcionChange,
-            label = { Text("Descripción del problema") },
+            label = {
+                Text("Descripción del problema")
+            },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3,
             maxLines = 5,
             isError = estado.errores.descripcion != null,
             supportingText = {
-                estado.errores.descripcion?.let {
+                estado.errores.descripcion?.let { mensaje ->
                     Text(
-                        it,
+                        text = mensaje,
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -206,7 +225,9 @@ fun NuevaSolicitudScreen(
 
         Box {
             OutlinedButton(
-                onClick = { menuExpandido = true },
+                onClick = {
+                    menuExpandido = true
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
@@ -226,7 +247,9 @@ fun NuevaSolicitudScreen(
             ) {
                 categorias.forEach { categoria ->
                     DropdownMenuItem(
-                        text = { Text(categoria) },
+                        text = {
+                            Text(categoria)
+                        },
                         onClick = {
                             viewModel.onCategoriaChange(categoria)
                             menuExpandido = false
@@ -236,9 +259,9 @@ fun NuevaSolicitudScreen(
             }
         }
 
-        estado.errores.categoria?.let {
+        estado.errores.categoria?.let { mensaje ->
             Text(
-                text = it,
+                text = mensaje,
                 color = MaterialTheme.colorScheme.error
             )
         }
@@ -259,7 +282,34 @@ fun NuevaSolicitudScreen(
         // BOTON CAMARA
         Button(
             onClick = {
-                abrirCamara.launch(null)
+                errorEvidencia = null
+
+                val permisoDeclarado = context.packageManager
+                    .getPackageInfo(
+                        context.packageName,
+                        PackageManager.GET_PERMISSIONS
+                    )
+                    .requestedPermissions
+                    ?.contains(Manifest.permission.CAMERA) == true
+
+                if (!permisoDeclarado) {
+                    // Cámara externa sin permiso CAMERA declarado
+                    abrirCamara.launch(null)
+                } else {
+                    val permisoConcedido =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                    if (permisoConcedido) {
+                        abrirCamara.launch(null)
+                    } else {
+                        solicitarPermisoCamara.launch(
+                            Manifest.permission.CAMERA
+                        )
+                    }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -275,6 +325,8 @@ fun NuevaSolicitudScreen(
         // BOTON GALERIA
         OutlinedButton(
             onClick = {
+                errorEvidencia = null
+
                 abrirGaleria.launch(
                     PickVisualMediaRequest(
                         ActivityResultContracts
@@ -287,7 +339,7 @@ fun NuevaSolicitudScreen(
             Text("Seleccionar desde galería")
         }
 
-        // VISTA PREVIA
+        // VISTA PREVIA DE LA EVIDENCIA
         estado.evidenciaUri?.let { ruta ->
 
             val bitmap = remember(ruta) {
@@ -327,7 +379,7 @@ fun NuevaSolicitudScreen(
             }
         }
 
-        // MOSTRAR ERROR DE IMAGEN
+        // ERROR DE EVIDENCIA
         errorEvidencia?.let { mensaje ->
             Text(
                 text = mensaje,
@@ -350,4 +402,3 @@ fun NuevaSolicitudScreen(
         }
     }
 }
-

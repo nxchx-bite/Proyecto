@@ -21,7 +21,6 @@ interface SolicitudDao {
     @Query("SELECT * FROM solicitudes WHERE id = :id LIMIT 1")
     fun obtenerPorId(id: Long): Flow<SolicitudEntity?>
 
-
     // Actualizar datos de una solicitud recibida
     @Query("""
         UPDATE solicitudes
@@ -37,4 +36,36 @@ interface SolicitudDao {
         categoria: String
     ): Int
 
+    // Cambiar el estado de una solicitud
+    @Query("""
+        UPDATE solicitudes
+        SET estado = :nuevoEstado
+        WHERE id = :id
+    """)
+    suspend fun actualizarEstado(
+        id: Long,
+        nuevoEstado: String
+    ): Int
+
+    // Cambiar la prioridad de una solicitud
+    @Query("""
+        UPDATE solicitudes
+        SET prioridad = :nuevaPrioridad
+        WHERE id = :id
+    """)
+    suspend fun actualizarPrioridad(
+        id: Long,
+        nuevaPrioridad: String
+    ): Int
+
+    // Asignar o cambiar el técnico responsable
+    @Query("""
+        UPDATE solicitudes
+        SET responsable = :responsable
+        WHERE id = :id
+    """)
+    suspend fun asignarResponsable(
+        id: Long,
+        responsable: String?
+    ): Int
 }

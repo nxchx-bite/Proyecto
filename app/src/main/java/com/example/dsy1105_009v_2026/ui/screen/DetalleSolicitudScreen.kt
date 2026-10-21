@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -29,7 +30,6 @@ fun DetalleSolicitudScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         Text(
             text = "Detalle de solicitud",
             style = MaterialTheme.typography.headlineMedium
@@ -44,7 +44,6 @@ fun DetalleSolicitudScreen(
         if (solicitud == null) {
             Text("Cargando solicitud o registro no encontrado.")
         } else {
-
             val datos = solicitud!!
 
             Text(
@@ -82,6 +81,26 @@ fun DetalleSolicitudScreen(
             )
             Text(datos.estado)
 
+            // CAMPO AGREGADO POR TU COMPAÑERO
+            HorizontalDivider()
+
+            Text(
+                text = "Prioridad",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(datos.prioridad)
+
+            // CAMPO AGREGADO POR TU COMPAÑERO
+            HorizontalDivider()
+
+            Text(
+                text = "Responsable asignado",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(
+                datos.responsable ?: "Sin responsable asignado"
+            )
+
             HorizontalDivider()
 
             Text(
@@ -90,9 +109,9 @@ fun DetalleSolicitudScreen(
             )
             Text(datos.fechaCreacion)
 
+            // EVIDENCIA FOTOGRAFICA
             HorizontalDivider()
 
-            //EVIDENCIA RECUPERADA DESDE ROOM
             Text(
                 text = "Evidencia fotográfica",
                 style = MaterialTheme.typography.titleMedium
@@ -102,9 +121,8 @@ fun DetalleSolicitudScreen(
                 evidenciaUri = datos.evidenciaUri
             )
 
-            // EDITAR SOLO SI ESTA RECIBIDA
+            // EDICION DE SOLICITUDES RECIBIDAS
             if (datos.estado == "Recibida") {
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Button(
@@ -117,5 +135,3 @@ fun DetalleSolicitudScreen(
         }
     }
 }
-
-
