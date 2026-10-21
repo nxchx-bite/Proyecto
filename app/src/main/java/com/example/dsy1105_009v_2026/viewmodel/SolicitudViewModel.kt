@@ -218,11 +218,14 @@ class SolicitudViewModel(application: Application) :
                     titulo = _estado.value.titulo,
                     descripcion = _estado.value.descripcion,
                     categoria = _estado.value.categoria,
+                    estado = "Recibida",
                     fechaCreacion = SimpleDateFormat(
-                        "dd/MM/yyyy",
+                        "dd/MM/yyyy HH:mm",
                         Locale.getDefault()
-                    ).format(Date())
+                    ).format(Date()),
+                    evidenciaUri = _estado.value.evidenciaUri
                 )
+
 
                 val id = repository.guardarSolicitud(solicitud)
 
@@ -244,6 +247,12 @@ class SolicitudViewModel(application: Application) :
     fun onCategoriaChange(categoria: String) {
         _estado.value = _estado.value.copy(
             categoria = categoria
+        )
+    }
+    // Actualizar la evidencia fotografica del formulario
+    fun onEvidenciaChange(uri: String?) {
+        _estado.value = _estado.value.copy(
+            evidenciaUri = uri
         )
     }
 
