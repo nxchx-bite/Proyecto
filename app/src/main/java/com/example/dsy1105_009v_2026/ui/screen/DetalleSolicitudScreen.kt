@@ -3,10 +3,12 @@ package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
@@ -19,155 +21,175 @@ fun DetalleSolicitudScreen(
     modoAdministrador: Boolean = false,
     onAdministrar: () -> Unit = {}
 ) {
-    // Consultar los datos de la solicitud
     val flujoSolicitud = remember(solicitudId, viewModel) {
         viewModel.obtenerSolicitudPorId(solicitudId)
     }
-
     val solicitud by flujoSolicitud.collectAsState(initial = null)
 
-    // NUEVO: Consultar historial desde Room
     val flujoHistorial = remember(solicitudId, viewModel) {
         viewModel.obtenerHistorial(solicitudId)
     }
-
-    val historial by flujoHistorial.collectAsState(
-        initial = emptyList()
-    )
+    val historial by flujoHistorial.collectAsState(initial = emptyList())
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        TextButton(onClick = onVolver) {
+            Text("← Volver a las solicitudes")
+        }
 
         Text(
             text = "Detalle de solicitud",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
         )
-
-        OutlinedButton(
-            onClick = onVolver
-        ) {
-            Text("Volver")
-        }
-
-        HorizontalDivider()
 
         val datos = solicitud
 
         if (datos == null) {
-
-            Text("Cargando solicitud o registro no encontrado.")
-
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Text(
+                    text = "Cargando solicitud o registro no encontrado.",
+                    modifier = Modifier.padding(20.dp)
+                )
+            }
         } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Text(
+                        text = "SOL-${datos.id.toString().padStart(3, '0')}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = datos.titulo,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        Text(
+                            text = "Estado: ${datos.estado}",
+                            modifier = Modifier.padding(
+                                horizontal = 12.dp,
+                                vertical = 7.dp
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
 
             Text(
-                text = "SOL-${datos.id.toString().padStart(3, '0')}",
+                text = "Información general",
                 style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
+                fontWeight = FontWeight.Bold
             )
 
-            Text(
-                text = datos.titulo,
-                style = MaterialTheme.typography.headlineSmall
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    CampoDetalle("Descripción", datos.descripcion)
+                    HorizontalDivider()
+                    CampoDetalle("Categoría", datos.categoria)
+                    HorizontalDivider()
+                    CampoDetalle("Prioridad", datos.prioridad)
+                    HorizontalDivider()
+                    CampoDetalle(
+                        "Responsable asignado",
+                        datos.responsable ?: "Sin responsable asignado"
+                    )
+                    HorizontalDivider()
+                    CampoDetalle("Fecha de creación", datos.fechaCreacion)
+                }
+            }
 
-            HorizontalDivider()
-
-            Text(
-                text = "Descripción",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(datos.descripcion)
-
-            HorizontalDivider()
-
-            Text(
-                text = "Categoría",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(datos.categoria)
-
-            HorizontalDivider()
-
-            Text(
-                text = "Estado",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(datos.estado)
-
-            HorizontalDivider()
-
-            Text(
-                text = "Prioridad",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(datos.prioridad)
-
-            HorizontalDivider()
-
-            Text(
-                text = "Responsable asignado",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                datos.responsable ?: "Sin responsable asignado"
-            )
-
-            HorizontalDivider()
-
-            Text(
-                text = "Fecha de creación",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(datos.fechaCreacion)
-
-            HorizontalDivider()
-
-            // EVIDENCIA
             Text(
                 text = "Evidencia fotográfica",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
 
-            EvidenciaImagen(
-                evidenciaUri = datos.evidenciaUri
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    EvidenciaImagen(evidenciaUri = datos.evidenciaUri)
+                }
+            }
 
-            HorizontalDivider()
-
-            // NUEVO: HISTORIAL
             Text(
                 text = "Historial de la solicitud",
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
 
             if (historial.isEmpty()) {
-
-                Text(
-                    text = "Todavía no hay cambios de estado registrados."
-                )
-
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Text(
+                        text = "Todavía no hay cambios de estado registrados.",
+                        modifier = Modifier.padding(18.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             } else {
-
                 historial.forEach { evento ->
-
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth()
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        elevation = CardDefaults.cardElevation(
+                            defaultElevation = 2.dp
+                        )
                     ) {
-
                         Column(
-                            modifier = Modifier.padding(14.dp),
-                            verticalArrangement =
-                                Arrangement.spacedBy(6.dp)
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-
                             Text(
                                 text = "${evento.estadoAnterior} → ${evento.estadoNuevo}",
-                                style = MaterialTheme.typography.titleSmall
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
                             )
 
                             Text(
@@ -186,6 +208,7 @@ fun DetalleSolicitudScreen(
                             )
 
                             if (evento.comentario.isNotBlank()) {
+                                HorizontalDivider()
                                 Text(
                                     text = evento.comentario,
                                     style = MaterialTheme.typography.bodyMedium
@@ -193,32 +216,64 @@ fun DetalleSolicitudScreen(
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 
-            // BOTONES SEGUN EL CONTEXTO
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (modoAdministrador) {
-
                 Button(
                     onClick = onAdministrar,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Text("Administrar solicitud")
                 }
-
             } else if (datos.estado == "Recibida") {
-
                 Button(
                     onClick = onEditar,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp)
                 ) {
                     Text("Editar solicitud")
                 }
             }
+
+            OutlinedButton(
+                onClick = onVolver,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Volver")
+            }
         }
+    }
+}
+
+@Composable
+private fun CampoDetalle(
+    titulo: String,
+    valor: String
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = valor,
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
     }
 }
