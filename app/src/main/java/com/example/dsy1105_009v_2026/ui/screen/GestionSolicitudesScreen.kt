@@ -4,33 +4,31 @@ package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GestionSolicitudesScreen(
     viewModel: SolicitudViewModel,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    solicitudId: Long? = null,
+    onVerDetalle: (Long) -> Unit = {}
 ) {
     val solicitudes by viewModel.solicitudes.collectAsState()
-
-    var solicitudSeleccionada by remember {
-        mutableStateOf<SolicitudEntity?>(null)
-    }
 
     var prioridad by remember { mutableStateOf("Media") }
     var estado by remember { mutableStateOf("Recibida") }
     var responsable by remember { mutableStateOf("") }
 
     var mensaje by remember { mutableStateOf<String?>(null) }
-    var mostrarMensaje by remember { mutableStateOf(false) }
     var menuPrioridad by remember { mutableStateOf(false) }
     var menuEstado by remember { mutableStateOf(false) }
 
@@ -47,19 +45,34 @@ fun GestionSolicitudesScreen(
 
     val prioridades = listOf("Baja", "Media", "Alta")
 
+    // La pantalla administrativa recibe el ID desde el detalle.
+    val solicitudSeleccionada = solicitudes.firstOrNull { it.id == solicitudId }
+
+    // Inicializar controles al abrir una solicitud concreta.
+    LaunchedEffect(solicitudId, solicitudSeleccionada?.id) {
+        solicitudSeleccionada?.let { seleccionada ->
+            prioridad = seleccionada.prioridad
+            estado = seleccionada.estado
+            responsable = seleccionada.responsable.orEmpty()
+            mensaje = null
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         Text(
-            text = "Gestión de solicitudes",
+            text = if (solicitudId == null) "Gestión de solicitudes" else "Administrar solicitud",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Solicitudes registradas: ${solicitudes.size}")
+        if (solicitudId == null) {
+            Text("Solicitudes registradas: ${solicitudes.size}")
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -72,9 +85,9 @@ fun GestionSolicitudesScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (solicitudes.isEmpty()) {
+        if (solicitudId == null && solicitudes.isEmpty()) {
             Text("Todavía no hay solicitudes registradas.")
-        } else {
+        } else if (solicitudId == null) {
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -87,19 +100,8 @@ fun GestionSolicitudesScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                solicitudSeleccionada = solicitud
-                                prioridad = solicitud.prioridad
-                                estado = solicitud.estado
-                                responsable = solicitud.responsable.orEmpty()
-                                mensaje = null
+                                onVerDetalle(solicitud.id)
                             },
-                        colors = CardDefaults.cardColors(
-                            containerColor =
-                                if (solicitudSeleccionada?.id == solicitud.id)
-                                    MaterialTheme.colorScheme.secondaryContainer
-                                else
-                                    MaterialTheme.colorScheme.surface
-                        )
                     ) {
                         Column(
                             modifier = Modifier.padding(14.dp),
@@ -125,7 +127,7 @@ fun GestionSolicitudesScreen(
                             )
 
                             Text(
-                                text = "Toca para gestionar",
+                                text = "Toca para ver el detalle",
                                 color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.labelMedium
                             )
@@ -135,170 +137,178 @@ fun GestionSolicitudesScreen(
             }
         }
 
+        if (solicitudId != null && solicitudSeleccionada == null) {
+            Text("Cargando solicitud o registro no encontrado.")
+        }
+
         solicitudSeleccionada?.let { seleccionada ->
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 12.dp)
-            )
-
-            Text(
-                text = "Administrar SOL-${seleccionada.id.toString().padStart(3, '0')}",
-                style = MaterialTheme.typography.titleLarge
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text("Prioridad")
-
-            ExposedDropdownMenuBox(
-                expanded = menuPrioridad,
-                onExpandedChange = {
-                    menuPrioridad = !menuPrioridad
-                }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
             ) {
-                OutlinedTextField(
-                    value = prioridad,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Seleccionar prioridad") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = menuPrioridad
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp)
                 )
 
-                ExposedDropdownMenu(
+                Text(
+                    text = "Administrar SOL-${seleccionada.id.toString().padStart(3, '0')}",
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text("Prioridad")
+
+                ExposedDropdownMenuBox(
                     expanded = menuPrioridad,
-                    onDismissRequest = { menuPrioridad = false }
+                    onExpandedChange = {
+                        menuPrioridad = !menuPrioridad
+                    }
                 ) {
-                    prioridades.forEach { opcion ->
-                        DropdownMenuItem(
-                            text = { Text(opcion) },
-                            onClick = {
-                                prioridad = opcion
-                                menuPrioridad = false
-                            }
-                        )
+                    OutlinedTextField(
+                        value = prioridad,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Seleccionar prioridad") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = menuPrioridad
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = menuPrioridad,
+                        onDismissRequest = { menuPrioridad = false }
+                    ) {
+                        prioridades.forEach { opcion ->
+                            DropdownMenuItem(
+                                text = { Text(opcion) },
+                                onClick = {
+                                    prioridad = opcion
+                                    menuPrioridad = false
+                                }
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Text("Estado")
+                Text("Estado")
 
-            ExposedDropdownMenuBox(
-                expanded = menuEstado,
-                onExpandedChange = {
-                    menuEstado = !menuEstado
+                ExposedDropdownMenuBox(
+                    expanded = menuEstado,
+                    onExpandedChange = {
+                        menuEstado = !menuEstado
+                    }
+                ) {
+                    OutlinedTextField(
+                        value = estado,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Seleccionar estado") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = menuEstado
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = menuEstado,
+                        onDismissRequest = { menuEstado = false }
+                    ) {
+                        estados.forEach { opcion ->
+                            DropdownMenuItem(
+                                text = { Text(opcion) },
+                                onClick = {
+                                    estado = opcion
+                                    menuEstado = false
+                                }
+                            )
+                        }
+                    }
                 }
-            ) {
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 OutlinedTextField(
-                    value = estado,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Seleccionar estado") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = menuEstado
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    value = responsable,
+                    onValueChange = { responsable = it },
+                    label = { Text("Nombre del técnico responsable") },
+                    placeholder = { Text("Ej.: Técnico 1") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
-                ExposedDropdownMenu(
-                    expanded = menuEstado,
-                    onDismissRequest = { menuEstado = false }
-                ) {
-                    estados.forEach { opcion ->
-                        DropdownMenuItem(
-                            text = { Text(opcion) },
-                            onClick = {
-                                estado = opcion
-                                menuEstado = false
-                            }
-                        )
-                    }
-                }
-            }
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        mensaje = null
 
-            OutlinedTextField(
-                value = responsable,
-                onValueChange = { responsable = it },
-                label = { Text("Nombre del técnico responsable") },
-                placeholder = { Text("Ej.: Técnico 1") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    mensaje = null
-
-                    viewModel.cambiarPrioridad(
-                        id = seleccionada.id,
-                        nuevaPrioridad = prioridad
-                    ) { errorPrioridad ->
-                        if (errorPrioridad != null) {
-                            mensaje = errorPrioridad
-                        } else {
-                            viewModel.cambiarEstado(
-                                id = seleccionada.id,
-                                nuevoEstado = estado
-                            ) { errorEstado ->
-                                if (errorEstado != null) {
-                                    mensaje = errorEstado
-                                } else {
-                                    viewModel.asignarTecnico(
-                                        id = seleccionada.id,
-                                        responsable = responsable
-                                    ) { errorResponsable ->
-                                        mensaje = errorResponsable
-                                            ?: "Cambios guardados correctamente."
+                        viewModel.cambiarPrioridad(
+                            id = seleccionada.id,
+                            nuevaPrioridad = prioridad
+                        ) { errorPrioridad ->
+                            if (errorPrioridad != null) {
+                                mensaje = errorPrioridad
+                            } else {
+                                viewModel.cambiarEstado(
+                                    id = seleccionada.id,
+                                    nuevoEstado = estado
+                                ) { errorEstado ->
+                                    if (errorEstado != null) {
+                                        mensaje = errorEstado
+                                    } else {
+                                        viewModel.asignarTecnico(
+                                            id = seleccionada.id,
+                                            responsable = responsable
+                                        ) { errorResponsable ->
+                                            mensaje = errorResponsable
+                                                ?: "Cambios guardados correctamente."
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Guardar cambios")
-            }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Guardar cambios")
+                }
 
-            TextButton(
-                onClick = {
-                    solicitudSeleccionada = null
-                    mensaje = null
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cancelar")
-            }
+                TextButton(
+                    onClick = onVolver,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Cancelar")
+                }
 
-            mensaje?.let {
-                Text(
-                    text = it,
-                    color = if (
-                        it == "Cambios guardados correctamente."
-                    ) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.error
-                    }
-                )
-            }
+                mensaje?.let {
+                    Text(
+                        text = it,
+                        color = if (
+                            it == "Cambios guardados correctamente."
+                        ) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.error
+                        }
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 }
+

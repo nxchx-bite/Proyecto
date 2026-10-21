@@ -12,13 +12,12 @@ import com.example.dsy1105_009v_2026.ui.screen.NuevaSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.ResumenSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.SolicitudConfirmadaScreen
 import com.example.dsy1105_009v_2026.ui.screen.GestionSolicitudesScreen
-import com.example.dsy1105_009v_2026.view.DrawerMenu
-import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
-import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
-
 import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
 import com.example.dsy1105_009v_2026.ui.screen.DetalleSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.EditarSolicitudScreen
+import com.example.dsy1105_009v_2026.view.DrawerMenu
+import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
+import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
 @Composable
 fun AppNav() {
@@ -109,81 +108,87 @@ fun AppNav() {
             )
         }
 
-        // Gestionar solicitudes
+        // LISTADO ADMINISTRATIVO
         composable("gestionarSolicitudes") {
             GestionSolicitudesScreen(
                 viewModel = solicitudViewModel,
-                onVolver = {
-                    navController.popBackStack()
+                onVolver = { navController.popBackStack() },
+                onVerDetalle = { id ->
+                    navController.navigate("detalleAdministrativo/$id")
                 }
             )
         }
 
+        // DETALLE ADMINISTRATIVO
+        composable(
+            route = "detalleAdministrativo/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
+            DetalleSolicitudScreen(
+                solicitudId = id,
+                viewModel = solicitudViewModel,
+                onVolver = { navController.popBackStack() },
+                onEditar = {},
+                modoAdministrador = true,
+                onAdministrar = {
+                    navController.navigate("administrarSolicitud/$id")
+                }
+            )
+        }
 
-// MIS SOLICITUDES - CLIENTE
+        // FORMULARIO ADMINISTRATIVO PARA UNA SOLICITUD
+        composable(
+            route = "administrarSolicitud/{id}",
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
+            GestionSolicitudesScreen(
+                viewModel = solicitudViewModel,
+                solicitudId = id,
+                onVolver = { navController.popBackStack() }
+            )
+        }
+
+        // MIS SOLICITUDES - CLIENTE
         composable("misSolicitudes") {
             ListaSolicitudesScreen(
                 viewModel = solicitudViewModel,
-                onVolver = {
-                    navController.popBackStack()
-                },
+                onVolver = { navController.popBackStack() },
                 onVerDetalle = { id ->
                     navController.navigate("detalleSolicitud/$id")
                 }
             )
         }
 
-// DETALLE DE SOLICITUD
+        // DETALLE DE CLIENTE
         composable(
             route = "detalleSolicitud/{id}",
-            arguments = listOf(
-                navArgument("id") {
-                    type = NavType.LongType
-                }
-            )
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStackEntry ->
-
-            val id = backStackEntry.arguments
-                ?.getLong("id") ?: 0L
-
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
             DetalleSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
-                onVolver = {
-                    navController.popBackStack()
-                },
+                onVolver = { navController.popBackStack() },
                 onEditar = {
                     navController.navigate("editarSolicitud/$id")
                 }
             )
         }
 
-// EDITAR SOLICITUD
+        // EDITAR DATOS DE CLIENTE
         composable(
             route = "editarSolicitud/{id}",
-            arguments = listOf(
-                navArgument("id") {
-                    type = NavType.LongType
-                }
-            )
+            arguments = listOf(navArgument("id") { type = NavType.LongType })
         ) { backStackEntry ->
-
-            val id = backStackEntry.arguments
-                ?.getLong("id") ?: 0L
-
+            val id = backStackEntry.arguments?.getLong("id") ?: 0L
             EditarSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
-                onVolver = {
-                    navController.popBackStack()
-                },
-                onActualizado = {
-                    navController.popBackStack()
-                }
+                onVolver = { navController.popBackStack() },
+                onActualizado = { navController.popBackStack() }
             )
         }
-
-
-
     }
 }

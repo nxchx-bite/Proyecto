@@ -1,4 +1,3 @@
-
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,9 @@ fun DetalleSolicitudScreen(
     solicitudId: Long,
     viewModel: SolicitudViewModel,
     onVolver: () -> Unit,
-    onEditar: () -> Unit
+    onEditar: () -> Unit,
+    modoAdministrador: Boolean = false,
+    onAdministrar: () -> Unit = {}
 ) {
     val flujoSolicitud = remember(solicitudId, viewModel) {
         viewModel.obtenerSolicitudPorId(solicitudId)
@@ -121,10 +122,17 @@ fun DetalleSolicitudScreen(
                 evidenciaUri = datos.evidenciaUri
             )
 
-            // EDICION DE SOLICITUDES RECIBIDAS
-            if (datos.estado == "Recibida") {
+            // BOTONES SEGUN CONTEXTO DE NAVEGACION
+            if (modoAdministrador) {
                 Spacer(modifier = Modifier.height(16.dp))
-
+                Button(
+                    onClick = onAdministrar,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Administrar solicitud")
+                }
+            } else if (datos.estado == "Recibida") {
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = onEditar,
                     modifier = Modifier.fillMaxWidth()
