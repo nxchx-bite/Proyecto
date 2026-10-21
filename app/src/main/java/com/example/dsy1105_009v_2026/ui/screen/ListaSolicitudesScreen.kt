@@ -9,6 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+
 @Composable
 fun ListaSolicitudesScreen(
     viewModel: SolicitudViewModel,

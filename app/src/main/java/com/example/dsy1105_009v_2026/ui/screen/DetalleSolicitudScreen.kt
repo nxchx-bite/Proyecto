@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -59,7 +60,7 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Descripcion",
+                text = "Descripción",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.descripcion)
@@ -67,7 +68,7 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Categoria",
+                text = "Categoría",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.categoria)
@@ -83,21 +84,39 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Fecha de creacion",
+                text = "Prioridad",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(datos.fechaCreacion)
+            Text(datos.prioridad)
+
+            HorizontalDivider()
 
             Text(
-                text = "Fecha de creacion",
+                text = "Responsable asignado",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Text(datos.responsable ?: "Sin responsable asignado")
+
+            HorizontalDivider()
+
+            Text(
+                text = "Fecha de creación",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.fechaCreacion)
 
-            // Boton para editar solicitudes recibidas
-            if (datos.estado == "Recibida") {
+            if (datos.evidenciaUri != null) {
+                HorizontalDivider()
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Evidencia adjunta",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(datos.evidenciaUri)
+            }
+
+            if (datos.estado == "Recibida") {
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
                     onClick = onEditar,
@@ -106,8 +125,6 @@ fun DetalleSolicitudScreen(
                     Text("Editar solicitud")
                 }
             }
-
         }
     }
 }
-

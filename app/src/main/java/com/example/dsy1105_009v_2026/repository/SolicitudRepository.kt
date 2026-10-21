@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.repository
 
 import com.example.dsy1105_009v_2026.model.data.local.SolicitudDao
@@ -27,9 +28,7 @@ class SolicitudRepository(
         return solicitudDao.obtenerPorId(id)
     }
 
-
-
-    // Actualizar una solicitud en Room
+    // Actualizar una solicitud recibida
     suspend fun actualizarSolicitud(
         id: Long,
         titulo: String,
@@ -44,4 +43,36 @@ class SolicitudRepository(
         )
     }
 
+    // Cambiar el estado de una solicitud
+    suspend fun actualizarEstado(
+        id: Long,
+        nuevoEstado: String
+    ): Int {
+        return solicitudDao.actualizarEstado(
+            id = id,
+            nuevoEstado = nuevoEstado
+        )
+    }
+
+    // Cambiar la prioridad
+    suspend fun actualizarPrioridad(
+        id: Long,
+        nuevaPrioridad: String
+    ): Int {
+        return solicitudDao.actualizarPrioridad(
+            id = id,
+            nuevaPrioridad = nuevaPrioridad
+        )
+    }
+
+    // Asignar un técnico responsable
+    suspend fun asignarResponsable(
+        id: Long,
+        responsable: String?
+    ): Int {
+        return solicitudDao.asignarResponsable(
+            id = id,
+            responsable = responsable
+        )
+    }
 }

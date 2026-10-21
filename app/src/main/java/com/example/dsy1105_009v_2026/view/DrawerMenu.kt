@@ -75,7 +75,7 @@ fun DrawerMenu(
                 label = { Text("Mis solicitudes") },
                 selected = false,
                 onClick = {
-                    navController.navigate("misSolicitudes")
+                    navController.navigate("gestionarSolicitudes")
                 },
                 icon = {
                     Icon(
@@ -91,7 +91,7 @@ fun DrawerMenu(
                 label = { Text("Gestionar solicitudes") },
                 selected = false,
                 onClick = {
-                    navController.navigate("misSolicitudes")
+                    navController.navigate("gestionarSolicitudes")
                 },
                 icon = {
                     Icon(

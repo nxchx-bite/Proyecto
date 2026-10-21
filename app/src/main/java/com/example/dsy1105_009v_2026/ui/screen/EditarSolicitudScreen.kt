@@ -155,12 +155,15 @@ fun EditarSolicitudScreen(
                 )
             }
 
+
             Button(
                 enabled = !guardando,
                 modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     errores = viewModel.validarEdicion(
-                        titulo, descripcion, categoria
+                        titulo,
+                        descripcion,
+                        categoria
                     )
 
                     if (
@@ -193,6 +196,7 @@ fun EditarSolicitudScreen(
                     else "Guardar cambios"
                 )
             }
+
 
             OutlinedButton(
                 onClick = onVolver,
