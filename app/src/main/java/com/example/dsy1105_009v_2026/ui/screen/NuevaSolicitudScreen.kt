@@ -13,12 +13,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
@@ -33,19 +35,12 @@ fun NuevaSolicitudScreen(
     val estado by viewModel.estado.collectAsState()
     val context = LocalContext.current
 
-    var menuExpandido by remember {
-        mutableStateOf(false)
-    }
+    var menuExpandido by remember { mutableStateOf(false) }
+    var errorEvidencia by remember { mutableStateOf<String?>(null) }
 
-    var errorEvidencia by remember {
-        mutableStateOf<String?>(null)
-    }
-
-    // CAMARA: TOMAR Y GUARDAR FOTOGRAFIA
     val abrirCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap ->
-
         if (bitmap != null) {
             try {
                 val archivo = File(
@@ -67,29 +62,18 @@ fun NuevaSolicitudScreen(
                     }
                 }
 
-                viewModel.onEvidenciaChange(
-                    Uri.fromFile(archivo).toString()
-                )
-
+                viewModel.onEvidenciaChange(Uri.fromFile(archivo).toString())
                 errorEvidencia = null
-
             } catch (e: Exception) {
                 errorEvidencia = "Error al guardar la fotografía"
-
-                Log.e(
-                    "NuevaSolicitud",
-                    "Error de cámara",
-                    e
-                )
+                Log.e("NuevaSolicitud", "Error de cámara", e)
             }
         }
     }
 
-    // PERMISO DE CAMARA
     val solicitarPermisoCamara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { permisoConcedido ->
-
         if (permisoConcedido) {
             abrirCamara.launch(null)
         } else {
@@ -97,15 +81,12 @@ fun NuevaSolicitudScreen(
         }
     }
 
-    // GALERIA: SELECCIONAR Y GUARDAR IMAGEN
     val abrirGaleria = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-
         if (uri != null) {
             try {
                 val tipo = context.contentResolver.getType(uri)
-
                 val extension = when (tipo) {
                     "image/png" -> "png"
                     "image/webp" -> "webp"
@@ -117,11 +98,8 @@ fun NuevaSolicitudScreen(
                     "evidencia_${System.currentTimeMillis()}.$extension"
                 )
 
-                val entrada = context.contentResolver
-                    .openInputStream(uri)
-                    ?: throw IllegalStateException(
-                        "No se pudo abrir la imagen"
-                    )
+                val entrada = context.contentResolver.openInputStream(uri)
+                    ?: throw IllegalStateException("No se pudo abrir la imagen")
 
                 entrada.use { origen ->
                     archivo.outputStream().use { destino ->
@@ -129,25 +107,15 @@ fun NuevaSolicitudScreen(
                     }
                 }
 
-                viewModel.onEvidenciaChange(
-                    Uri.fromFile(archivo).toString()
-                )
-
+                viewModel.onEvidenciaChange(Uri.fromFile(archivo).toString())
                 errorEvidencia = null
-
             } catch (e: Exception) {
                 errorEvidencia = "Error al seleccionar la imagen"
-
-                Log.e(
-                    "NuevaSolicitud",
-                    "Error de galería",
-                    e
-                )
+                Log.e("NuevaSolicitud", "Error de galería", e)
             }
         }
     }
 
-    // CATEGORIAS DISPONIBLES
     val categorias = listOf(
         "Desarrollo web",
         "Mantenimiento web",
@@ -162,243 +130,262 @@ fun NuevaSolicitudScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
-
         Text(
             text = "Nueva solicitud",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
 
         Text(
             text = "Completa los datos para registrar tu requerimiento.",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        // TITULO
-        OutlinedTextField(
-            value = estado.titulo,
-            onValueChange = viewModel::onTituloChange,
-            label = {
-                Text("Título de la solicitud")
-            },
+        Card(
             modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            isError = estado.errores.titulo != null,
-            supportingText = {
-                estado.errores.titulo?.let { mensaje ->
-                    Text(
-                        text = mensaje,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        )
-
-        // DESCRIPCION
-        OutlinedTextField(
-            value = estado.descripcion,
-            onValueChange = viewModel::onDescripcionChange,
-            label = {
-                Text("Descripción del problema")
-            },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3,
-            maxLines = 5,
-            isError = estado.errores.descripcion != null,
-            supportingText = {
-                estado.errores.descripcion?.let { mensaje ->
-                    Text(
-                        text = mensaje,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        )
-
-        // CATEGORIA
-        Text(
-            text = "Categoría",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Box {
-            OutlinedButton(
-                onClick = {
-                    menuExpandido = true
-                },
-                modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    if (estado.categoria.isBlank()) {
-                        "Seleccionar categoría"
-                    } else {
-                        estado.categoria
+                    text = "1. Información del requerimiento",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                OutlinedTextField(
+                    value = estado.titulo,
+                    onValueChange = viewModel::onTituloChange,
+                    label = { Text("Título de la solicitud") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    isError = estado.errores.titulo != null,
+                    supportingText = {
+                        estado.errores.titulo?.let { mensaje ->
+                            Text(mensaje, color = MaterialTheme.colorScheme.error)
+                        }
                     }
                 )
-            }
 
-            DropdownMenu(
-                expanded = menuExpandido,
-                onDismissRequest = {
-                    menuExpandido = false
+                OutlinedTextField(
+                    value = estado.descripcion,
+                    onValueChange = viewModel::onDescripcionChange,
+                    label = { Text("Descripción del problema") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3,
+                    maxLines = 5,
+                    shape = RoundedCornerShape(14.dp),
+                    isError = estado.errores.descripcion != null,
+                    supportingText = {
+                        estado.errores.descripcion?.let { mensaje ->
+                            Text(mensaje, color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                )
+
+                Text(
+                    text = "Categoría",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { menuExpandido = true },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text(
+                            text = if (estado.categoria.isBlank()) {
+                                "Seleccionar categoría"
+                            } else {
+                                estado.categoria
+                            }
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuExpandido,
+                        onDismissRequest = { menuExpandido = false }
+                    ) {
+                        categorias.forEach { categoria ->
+                            DropdownMenuItem(
+                                text = { Text(categoria) },
+                                onClick = {
+                                    viewModel.onCategoriaChange(categoria)
+                                    menuExpandido = false
+                                }
+                            )
+                        }
+                    }
                 }
+
+                estado.errores.categoria?.let { mensaje ->
+                    Text(
+                        text = mensaje,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                categorias.forEach { categoria ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(categoria)
-                        },
-                        onClick = {
-                            viewModel.onCategoriaChange(categoria)
-                            menuExpandido = false
+                Text(
+                    text = "2. Evidencia fotográfica",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Agrega una fotografía para ayudar a explicar el problema.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Button(
+                    onClick = {
+                        errorEvidencia = null
+
+                        val permisoDeclarado = context.packageManager
+                            .getPackageInfo(
+                                context.packageName,
+                                PackageManager.GET_PERMISSIONS
+                            )
+                            .requestedPermissions
+                            ?.contains(Manifest.permission.CAMERA) == true
+
+                        if (!permisoDeclarado) {
+                            abrirCamara.launch(null)
+                        } else {
+                            val permisoConcedido =
+                                ContextCompat.checkSelfPermission(
+                                    context,
+                                    Manifest.permission.CAMERA
+                                ) == PackageManager.PERMISSION_GRANTED
+
+                            if (permisoConcedido) {
+                                abrirCamara.launch(null)
+                            } else {
+                                solicitarPermisoCamara.launch(
+                                    Manifest.permission.CAMERA
+                                )
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        if (estado.evidenciaUri == null) {
+                            "Tomar fotografía"
+                        } else {
+                            "Tomar otra fotografía"
                         }
                     )
                 }
-            }
-        }
 
-        estado.errores.categoria?.let { mensaje ->
-            Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        HorizontalDivider()
-
-        // EVIDENCIA FOTOGRAFICA
-        Text(
-            text = "Fotografía de evidencia",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Text(
-            text = "Puedes tomar una fotografía o seleccionar " +
-                    "una imagen para mostrar el problema."
-        )
-
-        // BOTON CAMARA
-        Button(
-            onClick = {
-                errorEvidencia = null
-
-                val permisoDeclarado = context.packageManager
-                    .getPackageInfo(
-                        context.packageName,
-                        PackageManager.GET_PERMISSIONS
-                    )
-                    .requestedPermissions
-                    ?.contains(Manifest.permission.CAMERA) == true
-
-                if (!permisoDeclarado) {
-                    // Cámara externa sin permiso CAMERA declarado
-                    abrirCamara.launch(null)
-                } else {
-                    val permisoConcedido =
-                        ContextCompat.checkSelfPermission(
-                            context,
-                            Manifest.permission.CAMERA
-                        ) == PackageManager.PERMISSION_GRANTED
-
-                    if (permisoConcedido) {
-                        abrirCamara.launch(null)
-                    } else {
-                        solicitarPermisoCamara.launch(
-                            Manifest.permission.CAMERA
+                OutlinedButton(
+                    onClick = {
+                        errorEvidencia = null
+                        abrirGaleria.launch(
+                            PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            )
                         )
-                    }
-                }
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                if (estado.evidenciaUri == null) {
-                    "Tomar fotografía"
-                } else {
-                    "Tomar otra fotografía"
-                }
-            )
-        }
-
-        // BOTON GALERIA
-        OutlinedButton(
-            onClick = {
-                errorEvidencia = null
-
-                abrirGaleria.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts
-                            .PickVisualMedia.ImageOnly
-                    )
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Seleccionar desde galería")
-        }
-
-        // VISTA PREVIA DE LA EVIDENCIA
-        estado.evidenciaUri?.let { ruta ->
-
-            val bitmap = remember(ruta) {
-                try {
-                    BitmapFactory.decodeFile(
-                        Uri.parse(ruta).path
-                    )
-                } catch (e: Exception) {
-                    null
-                }
-            }
-
-            if (bitmap != null) {
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Fotografía de evidencia",
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 260.dp)
-                )
-            } else {
-                Text(
-                    text = "No se pudo mostrar la imagen",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+                        .height(50.dp),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Seleccionar desde galería")
+                }
 
-            // QUITAR EVIDENCIA
-            OutlinedButton(
-                onClick = {
-                    viewModel.onEvidenciaChange(null)
-                    errorEvidencia = null
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Quitar evidencia")
+                estado.evidenciaUri?.let { ruta ->
+                    val bitmap = remember(ruta) {
+                        try {
+                            BitmapFactory.decodeFile(Uri.parse(ruta).path)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    }
+
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Fotografía de evidencia",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 260.dp)
+                        )
+                    } else {
+                        Text(
+                            text = "No se pudo mostrar la imagen",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            viewModel.onEvidenciaChange(null)
+                            errorEvidencia = null
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Text("Quitar evidencia")
+                    }
+                }
+
+                errorEvidencia?.let { mensaje ->
+                    Text(
+                        text = mensaje,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
 
-        // ERROR DE EVIDENCIA
-        errorEvidencia?.let { mensaje ->
-            Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.error
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // CONTINUAR AL RESUMEN
         Button(
             onClick = {
                 if (viewModel.validarFormulario()) {
                     onSolicitudValida()
                 }
             },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(14.dp)
         ) {
-            Text("Continuar")
+            Text(
+                text = "Continuar al resumen",
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

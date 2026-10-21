@@ -1,11 +1,14 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
@@ -15,11 +18,7 @@ fun ResumenSolicitudScreen(
     onVolver: () -> Unit,
     onSolicitudGuardada: (Long) -> Unit
 ) {
-
-    // Datos del formulario
     val estado by viewModel.estado.collectAsState()
-
-    // Estado del guardado
     val guardando by viewModel.guardando.collectAsState()
     val errorGuardado by viewModel.errorGuardado.collectAsState()
 
@@ -27,73 +26,166 @@ fun ResumenSolicitudScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 18.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+        TextButton(
+            onClick = onVolver,
+            enabled = !guardando
+        ) {
+            Text("← Volver al formulario")
+        }
 
         Text(
             text = "Resumen de solicitud",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
         )
 
         Text(
-            text = "Revisa los datos antes de registrar tu solicitud."
+            text = "Revisa que todos los datos sean correctos antes de registrar tu solicitud.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        HorizontalDivider()
-
-        Text(
-            text = "Título",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(text = estado.titulo)
-
-        HorizontalDivider()
-
-        Text(
-            text = "Descripción",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(text = estado.descripcion)
-
-        HorizontalDivider()
-
-        Text(
-            text = "Categoría",
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(text = estado.categoria)
-
-        HorizontalDivider()
-
-        // NUEVO: EVIDENCIA FOTOGRAFICA
-        Text(
-            text = "Evidencia fotográfica",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        EvidenciaImagen(
-            evidenciaUri = estado.evidenciaUri
-        )
-
-        HorizontalDivider()
-
-        Text(
-            text = "Estado inicial: Recibida",
-            style = MaterialTheme.typography.bodyLarge
-        )
-
-        errorGuardado?.let { error ->
-            Text(
-                text = error,
-                color = MaterialTheme.colorScheme.error
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
             )
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "ESTADO INICIAL",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Text(
+                    text = "Recibida",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+
+                Text(
+                    text = "Tu solicitud comenzará con este estado al registrarse.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "Información ingresada",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                HorizontalDivider()
+
+                CampoResumen(
+                    titulo = "Título",
+                    valor = estado.titulo
+                )
+
+                HorizontalDivider()
+
+                CampoResumen(
+                    titulo = "Descripción",
+                    valor = estado.descripcion
+                )
+
+                HorizontalDivider()
+
+                CampoResumen(
+                    titulo = "Categoría",
+                    valor = estado.categoria
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Evidencia fotográfica",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (estado.evidenciaUri == null) {
+                    Text(
+                        text = "No se adjuntó una fotografía.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    EvidenciaImagen(
+                        evidenciaUri = estado.evidenciaUri
+                    )
+                }
+            }
+        }
+
+        if (errorGuardado != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text(
+                    text = errorGuardado.orEmpty(),
+                    modifier = Modifier.padding(16.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
 
         if (guardando) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Text(
+                    text = "Guardando tu solicitud...",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         Button(
@@ -103,21 +195,52 @@ fun ResumenSolicitudScreen(
                 }
             },
             enabled = !guardando,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp),
+            shape = RoundedCornerShape(14.dp)
         ) {
             Text(
-                if (guardando) "Guardando..."
-                else "Registrar solicitud"
+                text = if (guardando) {
+                    "Guardando..."
+                } else {
+                    "Confirmar y registrar solicitud"
+                },
+                fontWeight = FontWeight.Bold
             )
         }
 
         OutlinedButton(
             onClick = onVolver,
             enabled = !guardando,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(14.dp)
         ) {
             Text("Volver y editar")
         }
     }
 }
 
+@Composable
+private fun CampoResumen(
+    titulo: String,
+    valor: String
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(5.dp)
+    ) {
+        Text(
+            text = titulo,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = valor.ifBlank { "Sin información" },
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}

@@ -1,15 +1,19 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dsy1105_009v_2026.model.SolicitudErrores
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditarSolicitudScreen(
     solicitudId: Long,
@@ -23,32 +27,77 @@ fun EditarSolicitudScreen(
 
     val solicitud by flujo.collectAsState(initial = null)
 
+    var expandido by remember { mutableStateOf(false) }
+
+    val categorias = listOf(
+        "Desarrollo web",
+        "Mantenimiento web",
+        "Incidente tecnico",
+        "Hosting",
+        "Soporte de correo",
+        "Marketing digital",
+        "Otro requerimiento"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(20.dp),
+            .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        TextButton(onClick = onVolver) {
+            Text("← Volver")
+        }
+
         Text(
             text = "Editar solicitud",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Text(
+            text = "Modifica la información antes de guardar los cambios.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         val datos = solicitud
 
         if (datos == null) {
-            Text("Cargando solicitud o registro no encontrado.")
-
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp)
+            ) {
+                Text(
+                    text = "Cargando solicitud o registro no encontrado.",
+                    modifier = Modifier.padding(20.dp)
+                )
+            }
         } else if (datos.estado != "Recibida") {
-            Text("Esta solicitud ya no se puede editar.")
-
-            OutlinedButton(onClick = onVolver) {
-                Text("Volver")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Text(
+                    text = "Esta solicitud ya no se puede editar porque su estado es '${datos.estado}'.",
+                    modifier = Modifier.padding(18.dp),
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
             }
 
+            OutlinedButton(
+                onClick = onVolver,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text("Volver")
+            }
         } else {
-            // Mantener los cambios mientras se edita
             var titulo by remember(datos.id) {
                 mutableStateOf(datos.titulo)
             }
@@ -73,92 +122,138 @@ fun EditarSolicitudScreen(
                 mutableStateOf(false)
             }
 
-            OutlinedTextField(
-                value = titulo,
-                onValueChange = {
-                    titulo = it
-                    errores = errores.copy(titulo = null)
-                },
-                label = { Text("Titulo") },
-                isError = errores.titulo != null,
-                supportingText = {
-                    errores.titulo?.let { Text(it) }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = descripcion,
-                onValueChange = {
-                    descripcion = it
-                    errores = errores.copy(descripcion = null)
-                },
-                label = { Text("Descripcion") },
-                minLines = 3,
-                isError = errores.descripcion != null,
-                supportingText = {
-                    errores.descripcion?.let { Text(it) }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            var expandido by remember {
-                mutableStateOf(false)
-            }
-
-            val categorias = listOf(
-                "Desarrollo web",
-                "Mantenimiento web",
-                "Incidente tecnico",
-                "Hosting",
-                "Soporte de correo",
-                "Marketing digital",
-                "Otro requerimiento"
-            )
-
-            Box {
-                OutlinedButton(
-                    onClick = { expandido = true },
-                    modifier = Modifier.fillMaxWidth()
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 2.dp
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text(categoria)
-                }
+                    Text(
+                        text = "Información del requerimiento",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                DropdownMenu(
-                    expanded = expandido,
-                    onDismissRequest = { expandido = false }
-                ) {
-                    categorias.forEach { opcion ->
-                        DropdownMenuItem(
-                            text = { Text(opcion) },
-                            onClick = {
-                                categoria = opcion
-                                errores = errores.copy(categoria = null)
+                    Text(
+                        text = "Solicitud SOL-${datos.id.toString().padStart(3, '0')}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                    OutlinedTextField(
+                        value = titulo,
+                        onValueChange = {
+                            titulo = it
+                            errores = errores.copy(titulo = null)
+                            mensajeError = null
+                        },
+                        label = { Text("Título de la solicitud") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        isError = errores.titulo != null,
+                        supportingText = {
+                            errores.titulo?.let { Text(it) }
+                        }
+                    )
+
+                    OutlinedTextField(
+                        value = descripcion,
+                        onValueChange = {
+                            descripcion = it
+                            errores = errores.copy(descripcion = null)
+                            mensajeError = null
+                        },
+                        label = { Text("Descripción del problema") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        maxLines = 5,
+                        shape = RoundedCornerShape(14.dp),
+                        isError = errores.descripcion != null,
+                        supportingText = {
+                            errores.descripcion?.let { Text(it) }
+                        }
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = expandido,
+                        onExpandedChange = {
+                            expandido = !expandido
+                        }
+                    ) {
+                        OutlinedTextField(
+                            value = categoria,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Categoría") },
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                    expanded = expandido
+                                )
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            shape = RoundedCornerShape(14.dp),
+                            isError = errores.categoria != null
+                        )
+
+                        ExposedDropdownMenu(
+                            expanded = expandido,
+                            onDismissRequest = {
                                 expandido = false
                             }
+                        ) {
+                            categorias.forEach { opcion ->
+                                DropdownMenuItem(
+                                    text = { Text(opcion) },
+                                    onClick = {
+                                        categoria = opcion
+                                        errores = errores.copy(categoria = null)
+                                        mensajeError = null
+                                        expandido = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    errores.categoria?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
                         )
                     }
                 }
             }
 
-            errores.categoria?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error
-                )
+            mensajeError?.let { mensaje ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = mensaje,
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
             }
-
-            mensajeError?.let {
-                Text(
-                    text = it,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
 
             Button(
-                enabled = !guardando,
-                modifier = Modifier.fillMaxWidth(),
                 onClick = {
                     errores = viewModel.validarEdicion(
                         titulo,
@@ -189,19 +284,35 @@ fun EditarSolicitudScreen(
                             }
                         }
                     }
-                }
+                },
+                enabled = !guardando,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(14.dp)
             ) {
-                Text(
-                    if (guardando) "Guardando..."
-                    else "Guardar cambios"
-                )
+                if (guardando) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("Guardando cambios...")
+                } else {
+                    Text(
+                        text = "Guardar cambios",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
-
 
             OutlinedButton(
                 onClick = onVolver,
                 enabled = !guardando,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Text("Cancelar")
             }
