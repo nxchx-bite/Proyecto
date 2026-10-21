@@ -4,10 +4,14 @@ package com.example.dsy1105_009v_2026.repository
 import com.example.dsy1105_009v_2026.model.data.local.SolicitudDao
 import com.example.dsy1105_009v_2026.model.data.local.SolicitudEntity
 import kotlinx.coroutines.flow.Flow
+import com.example.dsy1105_009v_2026.model.data.local.HistorialSolicitudEntity
+import com.example.dsy1105_009v_2026.model.data.local.HistorialSolicitudDao
 
 class SolicitudRepository(
-    private val solicitudDao: SolicitudDao
+    private val solicitudDao: SolicitudDao,
+    private val historialDao: HistorialSolicitudDao
 ) {
+
 
     // Guardar una solicitud en Room
     suspend fun guardarSolicitud(
@@ -42,6 +46,24 @@ class SolicitudRepository(
             categoria = categoria
         )
     }
+
+
+    // Cambiar estado y registrar el historial
+// utilizando una transacción de Room
+    suspend fun cambiarEstadoConHistorial(
+        id: Long,
+        estadoAnterior: String,
+        estadoNuevo: String,
+        evento: HistorialSolicitudEntity
+    ): Boolean {
+        return solicitudDao.cambiarEstadoConHistorial(
+            solicitudId = id,
+            estadoAnterior = estadoAnterior,
+            estadoNuevo = estadoNuevo,
+            evento = evento
+        )
+    }
+
 
     // Cambiar el estado de una solicitud
 
@@ -79,4 +101,12 @@ class SolicitudRepository(
             responsable = responsable
         )
     }
+
+    // Obtener el historial de una solicitud desde Room
+    fun obtenerHistorial(
+        solicitudId: Long
+    ): Flow<List<HistorialSolicitudEntity>> {
+        return historialDao.obtenerPorSolicitud(solicitudId)
+    }
+
 }

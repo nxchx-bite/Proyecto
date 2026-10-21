@@ -20,6 +20,7 @@ import java.util.Locale
 
 import com.example.dsy1105_009v_2026.model.EstadoSolicitud
 import kotlinx.coroutines.flow.first
+import com.example.dsy1105_009v_2026.model.data.local.HistorialSolicitudEntity
 
 class SolicitudViewModel(application: Application) :
     AndroidViewModel(application) {
@@ -36,8 +37,12 @@ class SolicitudViewModel(application: Application) :
     private val database =
         SolicitudDatabase.getDatabase(application)
 
-    private val repository =
-        SolicitudRepository(database.solicitudDao())
+
+    private val repository = SolicitudRepository(
+        solicitudDao = database.solicitudDao(),
+        historialDao = database.historialSolicitudDao()
+    )
+
 
     val solicitudes: StateFlow<List<SolicitudEntity>> =
         repository.obtenerSolicitudes().stateIn(
@@ -45,6 +50,7 @@ class SolicitudViewModel(application: Application) :
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
 
 
     fun cambiarEstado(
@@ -63,7 +69,7 @@ class SolicitudViewModel(application: Application) :
 
         viewModelScope.launch {
             try {
-                // Consultar el estado actual desde Room
+                // Consultar la solicitud desde Room
                 val solicitud = repository
                     .obtenerSolicitudPorId(id)
                     .first()
@@ -82,30 +88,48 @@ class SolicitudViewModel(application: Application) :
                     return@launch
                 }
 
-                // Si no cambió, no necesitamos actualizar Room
+                // No registrar un cambio si el estado es igual
                 if (actual == destino) {
                     onResultado(null)
                     return@launch
                 }
 
-                // Validar la transición
+                // Comprobar si la transición está permitida
                 if (destino !in actual.siguientesEstados()) {
                     onResultado(
                         "No se permite pasar de " +
-                                "${actual.descripcion} a " +
-                                destino.descripcion
+                                "${actual.descripcion} a ${destino.descripcion}"
                     )
                     return@launch
                 }
 
-                // Guardar el cambio en Room
-                val filas = repository.actualizarEstado(
-                    id = id,
+                // Obtener la fecha y hora del cambio
+                val fechaActual = SimpleDateFormat(
+                    "dd/MM/yyyy HH:mm:ss",
+                    Locale.getDefault()
+                ).format(Date())
+
+                // Crear el registro del historial
+                val evento = HistorialSolicitudEntity(
+                    solicitudId = id,
                     estadoAnterior = actual.descripcion,
-                    nuevoEstado = destino.descripcion
+                    estadoNuevo = destino.descripcion,
+                    accion = "Cambio de estado",
+                    comentario = "Se actualizó el estado de la solicitud.",
+                    perfil = "ADMINISTRADOR",
+                    usuario = "Administrador (simulado)",
+                    fechaHora = fechaActual
                 )
 
-                if (filas > 0) {
+                // Actualizar estado y guardar historial juntos
+                val guardado = repository.cambiarEstadoConHistorial(
+                    id = id,
+                    estadoAnterior = actual.descripcion,
+                    estadoNuevo = destino.descripcion,
+                    evento = evento
+                )
+
+                if (guardado) {
                     onResultado(null)
                 } else {
                     onResultado(
@@ -115,10 +139,13 @@ class SolicitudViewModel(application: Application) :
                 }
 
             } catch (e: Exception) {
-                onResultado("No se pudo cambiar el estado")
+                onResultado(
+                    "No se pudo actualizar el estado ni registrar el historial"
+                )
             }
         }
     }
+
 
 
     fun obtenerSolicitudPorId(
@@ -126,6 +153,14 @@ class SolicitudViewModel(application: Application) :
     ): kotlinx.coroutines.flow.Flow<SolicitudEntity?> {
         return repository.obtenerSolicitudPorId(id)
     }
+
+    // Consultar el historial de una solicitud
+    fun obtenerHistorial(
+        solicitudId: Long
+    ): kotlinx.coroutines.flow.Flow<List<HistorialSolicitudEntity>> {
+        return repository.obtenerHistorial(solicitudId)
+    }
+
     fun cambiarPrioridad(
         id: Long,
         nuevaPrioridad: String,

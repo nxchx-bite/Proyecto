@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -18,11 +19,21 @@ fun DetalleSolicitudScreen(
     modoAdministrador: Boolean = false,
     onAdministrar: () -> Unit = {}
 ) {
+    // Consultar los datos de la solicitud
     val flujoSolicitud = remember(solicitudId, viewModel) {
         viewModel.obtenerSolicitudPorId(solicitudId)
     }
 
     val solicitud by flujoSolicitud.collectAsState(initial = null)
+
+    // NUEVO: Consultar historial desde Room
+    val flujoHistorial = remember(solicitudId, viewModel) {
+        viewModel.obtenerHistorial(solicitudId)
+    }
+
+    val historial by flujoHistorial.collectAsState(
+        initial = emptyList()
+    )
 
     Column(
         modifier = Modifier
@@ -31,21 +42,27 @@ fun DetalleSolicitudScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         Text(
             text = "Detalle de solicitud",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        OutlinedButton(onClick = onVolver) {
+        OutlinedButton(
+            onClick = onVolver
+        ) {
             Text("Volver")
         }
 
         HorizontalDivider()
 
-        if (solicitud == null) {
+        val datos = solicitud
+
+        if (datos == null) {
+
             Text("Cargando solicitud o registro no encontrado.")
+
         } else {
-            val datos = solicitud!!
 
             Text(
                 text = "SOL-${datos.id.toString().padStart(3, '0')}",
@@ -82,7 +99,6 @@ fun DetalleSolicitudScreen(
             )
             Text(datos.estado)
 
-            // CAMPO AGREGADO POR TU COMPAÑERO
             HorizontalDivider()
 
             Text(
@@ -91,7 +107,6 @@ fun DetalleSolicitudScreen(
             )
             Text(datos.prioridad)
 
-            // CAMPO AGREGADO POR TU COMPAÑERO
             HorizontalDivider()
 
             Text(
@@ -110,9 +125,9 @@ fun DetalleSolicitudScreen(
             )
             Text(datos.fechaCreacion)
 
-            // EVIDENCIA FOTOGRAFICA
             HorizontalDivider()
 
+            // EVIDENCIA
             Text(
                 text = "Evidencia fotográfica",
                 style = MaterialTheme.typography.titleMedium
@@ -122,17 +137,81 @@ fun DetalleSolicitudScreen(
                 evidenciaUri = datos.evidenciaUri
             )
 
-            // BOTONES SEGUN CONTEXTO DE NAVEGACION
+            HorizontalDivider()
+
+            // NUEVO: HISTORIAL
+            Text(
+                text = "Historial de la solicitud",
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            if (historial.isEmpty()) {
+
+                Text(
+                    text = "Todavía no hay cambios de estado registrados."
+                )
+
+            } else {
+
+                historial.forEach { evento ->
+
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement =
+                                Arrangement.spacedBy(6.dp)
+                        ) {
+
+                            Text(
+                                text = "${evento.estadoAnterior} → ${evento.estadoNuevo}",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+
+                            Text(
+                                text = "Fecha: ${evento.fechaHora}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            Text(
+                                text = "Usuario: ${evento.usuario}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            Text(
+                                text = "Perfil: ${evento.perfil}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            if (evento.comentario.isNotBlank()) {
+                                Text(
+                                    text = evento.comentario,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
+            // BOTONES SEGUN EL CONTEXTO
+            Spacer(modifier = Modifier.height(8.dp))
+
             if (modoAdministrador) {
-                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = onAdministrar,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Administrar solicitud")
                 }
+
             } else if (datos.estado == "Recibida") {
-                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = onEditar,
                     modifier = Modifier.fillMaxWidth()
