@@ -1,4 +1,3 @@
-
 package com.example.dsy1105_009v_2026.ui.screen
 
 import androidx.compose.foundation.layout.*
@@ -17,10 +16,10 @@ fun ResumenSolicitudScreen(
     onSolicitudGuardada: (Long) -> Unit
 ) {
 
-    // Observar datos del formulario
+    // Datos del formulario
     val estado by viewModel.estado.collectAsState()
 
-    // Observar estado del guardado
+    // Estado del guardado
     val guardando by viewModel.guardando.collectAsState()
     val errorGuardado by viewModel.errorGuardado.collectAsState()
 
@@ -44,7 +43,7 @@ fun ResumenSolicitudScreen(
         HorizontalDivider()
 
         Text(
-            text = "Titulo",
+            text = "Título",
             style = MaterialTheme.typography.titleMedium
         )
         Text(text = estado.titulo)
@@ -52,7 +51,7 @@ fun ResumenSolicitudScreen(
         HorizontalDivider()
 
         Text(
-            text = "Descripcion",
+            text = "Descripción",
             style = MaterialTheme.typography.titleMedium
         )
         Text(text = estado.descripcion)
@@ -60,10 +59,22 @@ fun ResumenSolicitudScreen(
         HorizontalDivider()
 
         Text(
-            text = "Categoria",
+            text = "Categoría",
             style = MaterialTheme.typography.titleMedium
         )
         Text(text = estado.categoria)
+
+        HorizontalDivider()
+
+        // NUEVO: EVIDENCIA FOTOGRAFICA
+        Text(
+            text = "Evidencia fotográfica",
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        EvidenciaImagen(
+            evidenciaUri = estado.evidenciaUri
+        )
 
         HorizontalDivider()
 
@@ -72,7 +83,6 @@ fun ResumenSolicitudScreen(
             style = MaterialTheme.typography.bodyLarge
         )
 
-        // Mostrar errores de almacenamiento
         errorGuardado?.let { error ->
             Text(
                 text = error,
@@ -80,14 +90,12 @@ fun ResumenSolicitudScreen(
             )
         }
 
-        // Indicador de carga
         if (guardando) {
             LinearProgressIndicator(
                 modifier = Modifier.fillMaxWidth()
             )
         }
 
-        // Guardar la solicitud
         Button(
             onClick = {
                 viewModel.guardarSolicitud { id ->
@@ -112,3 +120,4 @@ fun ResumenSolicitudScreen(
         }
     }
 }
+

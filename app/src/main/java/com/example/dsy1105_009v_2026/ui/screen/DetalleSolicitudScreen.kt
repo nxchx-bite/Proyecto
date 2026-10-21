@@ -29,6 +29,7 @@ fun DetalleSolicitudScreen(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         Text(
             text = "Detalle de solicitud",
             style = MaterialTheme.typography.headlineMedium
@@ -43,6 +44,7 @@ fun DetalleSolicitudScreen(
         if (solicitud == null) {
             Text("Cargando solicitud o registro no encontrado.")
         } else {
+
             val datos = solicitud!!
 
             Text(
@@ -59,7 +61,7 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Descripcion",
+                text = "Descripción",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.descripcion)
@@ -67,7 +69,7 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Categoria",
+                text = "Categoría",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.categoria)
@@ -83,18 +85,24 @@ fun DetalleSolicitudScreen(
             HorizontalDivider()
 
             Text(
-                text = "Fecha de creacion",
+                text = "Fecha de creación",
                 style = MaterialTheme.typography.titleMedium
             )
             Text(datos.fechaCreacion)
 
+            HorizontalDivider()
+
+            //EVIDENCIA RECUPERADA DESDE ROOM
             Text(
-                text = "Fecha de creacion",
+                text = "Evidencia fotográfica",
                 style = MaterialTheme.typography.titleMedium
             )
-            Text(datos.fechaCreacion)
 
-            // Boton para editar solicitudes recibidas
+            EvidenciaImagen(
+                evidenciaUri = datos.evidenciaUri
+            )
+
+            // EDITAR SOLO SI ESTA RECIBIDA
             if (datos.estado == "Recibida") {
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -106,8 +114,8 @@ fun DetalleSolicitudScreen(
                     Text("Editar solicitud")
                 }
             }
-
         }
     }
 }
+
 
