@@ -27,7 +27,8 @@ fun GestionSolicitudesScreen(
     viewModel: SolicitudViewModel,
     onVolver: () -> Unit,
     solicitudId: Long? = null,
-    onVerDetalle: (Long) -> Unit = {}
+    onVerDetalle: (Long) -> Unit = {},
+    onSolicitudEliminada: () -> Unit = {}
 ) {
     val solicitudes by viewModel.solicitudes.collectAsState()
 
@@ -38,6 +39,7 @@ fun GestionSolicitudesScreen(
     var guardando by remember { mutableStateOf(false) }
     var menuPrioridad by remember { mutableStateOf(false) }
     var menuEstado by remember { mutableStateOf(false) }
+    var mostrarDialogoEliminar by remember { mutableStateOf(false) }
 
     val estados = listOf(
         "Recibida",
@@ -445,6 +447,24 @@ fun GestionSolicitudesScreen(
                     }
                 }
 
+                // ELIMINAR SOLICITUD (solo aparece al administrar una solicitud)
+                Button(
+                    onClick = {
+                        mostrarDialogoEliminar = true
+                        mensaje = null
+                    },
+                    enabled = !guardando,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Eliminar solicitud")
+                }
+
                 OutlinedButton(
                     onClick = onVolver,
                     enabled = !guardando,
@@ -454,6 +474,64 @@ fun GestionSolicitudesScreen(
                     shape = RoundedCornerShape(14.dp)
                 ) {
                     Text("Cancelar")
+                }
+
+                // CONFIRMACION ANTES DE ELIMINAR
+                if (mostrarDialogoEliminar) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            if (!guardando) {
+                                mostrarDialogoEliminar = false
+                            }
+                        },
+                        title = {
+                            Text("Eliminar solicitud")
+                        },
+                        text = {
+                            Text(
+                                "¿Estás seguro de que deseas eliminar " +
+                                        "esta solicitud? Esta acción no se puede deshacer."
+                            )
+                        },
+                        confirmButton = {
+                            TextButton(
+                                enabled = !guardando,
+                                onClick = {
+                                    mensaje = null
+                                    guardando = true
+
+                                    viewModel.eliminarSolicitud(
+                                        id = solicitudSeleccionada.id
+                                    ) { error ->
+                                        guardando = false
+
+                                        if (error == null) {
+                                            mostrarDialogoEliminar = false
+                                            onSolicitudEliminada()
+                                        } else {
+                                            mostrarDialogoEliminar = false
+                                            mensaje = error
+                                        }
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    "Eliminar",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                enabled = !guardando,
+                                onClick = {
+                                    mostrarDialogoEliminar = false
+                                }
+                            ) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))

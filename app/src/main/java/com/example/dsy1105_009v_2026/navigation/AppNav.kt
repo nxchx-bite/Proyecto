@@ -1,6 +1,8 @@
+
 package com.example.dsy1105_009v_2026
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -56,11 +58,21 @@ fun AppNav() {
         }
 
         // Crear solicitud
-        composable("nuevaSolicitud") {
+        composable("nuevaSolicitud") { backStackEntry ->
+
+            LaunchedEffect(backStackEntry) {
+                solicitudViewModel.limpiarFormulario()
+            }
+
             NuevaSolicitudScreen(
                 viewModel = solicitudViewModel,
+
                 onSolicitudValida = {
                     navController.navigate("resumenSolicitud")
+                },
+
+                onVolverInicio = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -73,7 +85,6 @@ fun AppNav() {
                     navController.popBackStack()
                 },
                 onSolicitudGuardada = { id ->
-
                     navController.navigate("solicitudConfirmada/$id") {
                         popUpTo("nuevaSolicitud") {
                             inclusive = true
@@ -98,12 +109,7 @@ fun AppNav() {
             SolicitudConfirmadaScreen(
                 solicitudId = id,
                 onVolverInicio = {
-                    navController.navigate("login") {
-                        popUpTo("login") {
-                            inclusive = false
-                        }
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack()
                 }
             )
         }
@@ -112,7 +118,9 @@ fun AppNav() {
         composable("gestionarSolicitudes") {
             GestionSolicitudesScreen(
                 viewModel = solicitudViewModel,
-                onVolver = { navController.popBackStack() },
+                onVolver = {
+                    navController.popBackStack()
+                },
                 onVerDetalle = { id ->
                     navController.navigate("detalleAdministrativo/$id")
                 }
@@ -122,13 +130,21 @@ fun AppNav() {
         // DETALLE ADMINISTRATIVO
         composable(
             route = "detalleAdministrativo/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
         ) { backStackEntry ->
+
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
+
             DetalleSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
-                onVolver = { navController.popBackStack() },
+                onVolver = {
+                    navController.popBackStack()
+                },
                 onEditar = {},
                 modoAdministrador = true,
                 onAdministrar = {
@@ -140,13 +156,29 @@ fun AppNav() {
         // FORMULARIO ADMINISTRATIVO PARA UNA SOLICITUD
         composable(
             route = "administrarSolicitud/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
         ) { backStackEntry ->
+
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
+
             GestionSolicitudesScreen(
                 viewModel = solicitudViewModel,
                 solicitudId = id,
-                onVolver = { navController.popBackStack() }
+                onVolver = {
+                    navController.popBackStack()
+                },
+
+                // Al eliminar, regresar al listado del administrador
+                onSolicitudEliminada = {
+                    navController.popBackStack(
+                        "gestionarSolicitudes",
+                        inclusive = false
+                    )
+                }
             )
         }
 
@@ -154,7 +186,9 @@ fun AppNav() {
         composable("misSolicitudes") {
             ListaSolicitudesScreen(
                 viewModel = solicitudViewModel,
-                onVolver = { navController.popBackStack() },
+                onVolver = {
+                    navController.popBackStack()
+                },
                 onVerDetalle = { id ->
                     navController.navigate("detalleSolicitud/$id")
                 }
@@ -164,13 +198,21 @@ fun AppNav() {
         // DETALLE DE CLIENTE
         composable(
             route = "detalleSolicitud/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
         ) { backStackEntry ->
+
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
+
             DetalleSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
-                onVolver = { navController.popBackStack() },
+                onVolver = {
+                    navController.popBackStack()
+                },
                 onEditar = {
                     navController.navigate("editarSolicitud/$id")
                 }
@@ -180,14 +222,24 @@ fun AppNav() {
         // EDITAR DATOS DE CLIENTE
         composable(
             route = "editarSolicitud/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.LongType })
+            arguments = listOf(
+                navArgument("id") {
+                    type = NavType.LongType
+                }
+            )
         ) { backStackEntry ->
+
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
+
             EditarSolicitudScreen(
                 solicitudId = id,
                 viewModel = solicitudViewModel,
-                onVolver = { navController.popBackStack() },
-                onActualizado = { navController.popBackStack() }
+                onVolver = {
+                    navController.popBackStack()
+                },
+                onActualizado = {
+                    navController.popBackStack()
+                }
             )
         }
     }

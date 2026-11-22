@@ -1,4 +1,3 @@
-
 package com.example.dsy1105_009v_2026.ui.screen
 
 import android.Manifest
@@ -30,7 +29,8 @@ import java.io.FileOutputStream
 @Composable
 fun NuevaSolicitudScreen(
     viewModel: SolicitudViewModel,
-    onSolicitudValida: () -> Unit
+    onSolicitudValida: () -> Unit,
+    onVolverInicio: () -> Unit
 ) {
     val estado by viewModel.estado.collectAsState()
     val context = LocalContext.current
@@ -133,6 +133,13 @@ fun NuevaSolicitudScreen(
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
+
+        TextButton(
+            onClick = onVolverInicio,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("← Volver al inicio")
+        }
         Text(
             text = "Nueva solicitud",
             style = MaterialTheme.typography.headlineMedium,

@@ -309,6 +309,31 @@ class SolicitudViewModel(application: Application) :
             }
         }
     }
+
+
+    // Eliminar solicitud desde la administración
+    fun eliminarSolicitud(
+        id: Long,
+        onResultado: (String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            try {
+                val filas = repository.eliminarSolicitud(id)
+
+                if (filas > 0) {
+                    onResultado(null)
+                } else {
+                    onResultado("No se encontró la solicitud.")
+                }
+
+            } catch (e: Exception) {
+                onResultado(
+                    e.message ?: "No se pudo eliminar la solicitud."
+                )
+            }
+        }
+    }
+
     fun onDescripcionChange(descripcion: String) {
         _estado.value = _estado.value.copy(
             descripcion = descripcion
@@ -362,4 +387,11 @@ class SolicitudViewModel(application: Application) :
             titulo = titulo
         )
     }
+
+
+    fun limpiarFormulario() {
+        _estado.value = SolicitudUiState()
+    }
+
+
 }

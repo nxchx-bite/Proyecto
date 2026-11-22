@@ -20,6 +20,11 @@ class SolicitudRepository(
         return solicitudDao.insertar(solicitud)
     }
 
+    // Eliminar una solicitud
+    suspend fun eliminarSolicitud(id: Long): Int {
+        return solicitudDao.eliminarSolicitud(id)
+    }
+
     // Obtener todas las solicitudes
     fun obtenerSolicitudes(): Flow<List<SolicitudEntity>> {
         return solicitudDao.obtenerTodas()

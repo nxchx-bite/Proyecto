@@ -14,6 +14,12 @@ interface SolicitudDao {
     @Insert
     suspend fun insertar(solicitud: SolicitudEntity): Long
 
+
+    // Eliminar una solicitud por su ID
+    @Query("DELETE FROM solicitudes WHERE id = :id")
+    suspend fun eliminarSolicitud(id: Long): Int
+
+
     // Obtener todas las solicitudes registradas
     @Query("SELECT * FROM solicitudes ORDER BY id DESC")
     fun obtenerTodas(): Flow<List<SolicitudEntity>>
