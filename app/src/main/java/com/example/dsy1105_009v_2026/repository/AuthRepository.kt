@@ -8,7 +8,8 @@ class AuthRepository {
     fun login(username: String, password: String): Credential? {
         val credentials = listOf(
             Credential.Admin,
-            Credential.Cliente
+            Credential.Cliente,
+            Credential.Tecnico
         )
 
         return credentials.find {

@@ -39,6 +39,7 @@ fun GestionSolicitudesScreen(
     var guardando by remember { mutableStateOf(false) }
     var menuPrioridad by remember { mutableStateOf(false) }
     var menuEstado by remember { mutableStateOf(false) }
+    var menuTecnico by remember { mutableStateOf(false) }
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
 
     val estados = listOf(
@@ -53,6 +54,9 @@ fun GestionSolicitudesScreen(
     )
 
     val prioridades = listOf("Baja", "Media", "Alta")
+    // Por ahora existe una cuenta de técnico registrada.
+    // Agregaremos aquí los demás técnicos cuando creemos sus cuentas.
+    val tecnicos = listOf("tecnico")
 
     val solicitudSeleccionada =
         solicitudes.firstOrNull { it.id == solicitudId }
@@ -357,15 +361,51 @@ fun GestionSolicitudesScreen(
                     }
                 }
 
-                OutlinedTextField(
-                    value = responsable,
-                    onValueChange = { responsable = it },
-                    label = { Text("Técnico responsable") },
-                    placeholder = { Text("Ej.: Técnico 1") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp)
-                )
+                ExposedDropdownMenuBox(
+                    expanded = menuTecnico,
+                    onExpandedChange = {
+                        menuTecnico = !menuTecnico
+                    }
+                ) {
+                    OutlinedTextField(
+                        value = when (responsable) {
+                            "tecnico" -> "Técnico (tecnico)"
+                            else -> responsable.ifBlank { "Seleccionar técnico" }
+                        },
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Técnico responsable") },
+                        placeholder = { Text("Seleccionar técnico") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(
+                                expanded = menuTecnico
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = menuTecnico,
+                        onDismissRequest = {
+                            menuTecnico = false
+                        }
+                    ) {
+                        tecnicos.forEach { tecnico ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text("Técnico ($tecnico)")
+                                },
+                                onClick = {
+                                    responsable = tecnico
+                                    menuTecnico = false
+                                }
+                            )
+                        }
+                    }
+                }
 
                 mensaje?.let { texto ->
                     Card(

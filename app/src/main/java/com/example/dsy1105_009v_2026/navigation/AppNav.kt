@@ -17,6 +17,8 @@ import com.example.dsy1105_009v_2026.ui.screen.GestionSolicitudesScreen
 import com.example.dsy1105_009v_2026.ui.screen.ListaSolicitudesScreen
 import com.example.dsy1105_009v_2026.ui.screen.DetalleSolicitudScreen
 import com.example.dsy1105_009v_2026.ui.screen.EditarSolicitudScreen
+import com.example.dsy1105_009v_2026.ui.screen.SolicitudesTecnicoScreen
+
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
@@ -32,14 +34,14 @@ fun AppNav() {
         startDestination = "login"
     ) {
 
-        // Inicio de sesión
+        // INICIO DE SESIÓN
         composable("login") {
             HomeScreen(
                 navController = navController
             )
         }
 
-        // Menú principal
+        // MENÚ PRINCIPAL
         composable(
             route = "DrawerMenu/{username}/{role}"
         ) { backStackEntry ->
@@ -57,7 +59,7 @@ fun AppNav() {
             )
         }
 
-        // Crear solicitud
+        // CREAR SOLICITUD
         composable("nuevaSolicitud") { backStackEntry ->
 
             LaunchedEffect(backStackEntry) {
@@ -66,18 +68,16 @@ fun AppNav() {
 
             NuevaSolicitudScreen(
                 viewModel = solicitudViewModel,
-
                 onSolicitudValida = {
                     navController.navigate("resumenSolicitud")
                 },
-
                 onVolverInicio = {
                     navController.popBackStack()
                 }
             )
         }
 
-        // Resumen y registro de la solicitud
+        // RESUMEN Y REGISTRO DE LA SOLICITUD
         composable("resumenSolicitud") {
             ResumenSolicitudScreen(
                 viewModel = solicitudViewModel,
@@ -94,7 +94,7 @@ fun AppNav() {
             )
         }
 
-        // Confirmación de la solicitud
+        // CONFIRMACIÓN DE LA SOLICITUD
         composable(
             route = "solicitudConfirmada/{id}",
             arguments = listOf(
@@ -109,6 +109,28 @@ fun AppNav() {
             SolicitudConfirmadaScreen(
                 solicitudId = id,
                 onVolverInicio = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        // SOLICITUDES ASIGNADAS AL TÉCNICO
+        composable(
+            route = "solicitudesTecnico/{username}",
+            arguments = listOf(
+                navArgument("username") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val username =
+                backStackEntry.arguments?.getString("username") ?: ""
+
+            SolicitudesTecnicoScreen(
+                viewModel = solicitudViewModel,
+                username = username,
+                onVolver = {
                     navController.popBackStack()
                 }
             )
@@ -153,7 +175,7 @@ fun AppNav() {
             )
         }
 
-        // FORMULARIO ADMINISTRATIVO PARA UNA SOLICITUD
+        // FORMULARIO ADMINISTRATIVO
         composable(
             route = "administrarSolicitud/{id}",
             arguments = listOf(
@@ -171,8 +193,6 @@ fun AppNav() {
                 onVolver = {
                     navController.popBackStack()
                 },
-
-                // Al eliminar, regresar al listado del administrador
                 onSolicitudEliminada = {
                     navController.popBackStack(
                         "gestionarSolicitudes",
@@ -195,7 +215,7 @@ fun AppNav() {
             )
         }
 
-        // DETALLE DE CLIENTE
+        // DETALLE DEL CLIENTE
         composable(
             route = "detalleSolicitud/{id}",
             arguments = listOf(
@@ -219,7 +239,7 @@ fun AppNav() {
             )
         }
 
-        // EDITAR DATOS DE CLIENTE
+        // EDITAR DATOS DEL CLIENTE
         composable(
             route = "editarSolicitud/{id}",
             arguments = listOf(

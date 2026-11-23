@@ -24,6 +24,17 @@ interface SolicitudDao {
     @Query("SELECT * FROM solicitudes ORDER BY id DESC")
     fun obtenerTodas(): Flow<List<SolicitudEntity>>
 
+    // Obtener solicitudes asignadas a un técnico específico
+    @Query("""
+    SELECT * FROM solicitudes
+    WHERE responsable = :username
+    ORDER BY id DESC
+""")
+    fun obtenerPorTecnico(
+        username: String
+    ): Flow<List<SolicitudEntity>>
+
+
     // Buscar una solicitud por su identificador
     @Query("SELECT * FROM solicitudes WHERE id = :id LIMIT 1")
     fun obtenerPorId(id: Long): Flow<SolicitudEntity?>

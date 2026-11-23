@@ -148,10 +148,115 @@ class SolicitudViewModel(application: Application) :
 
 
 
+    // Permite al técnico actualizar el estado de una solicitud asignada
+    // y guardar el comentario dentro del historial en una sola transacción.
+    fun cambiarEstadoTecnico(
+        id: Long,
+        nuevoEstado: String,
+        comentario: String,
+        username: String,
+        onResultado: (String?) -> Unit
+    ) {
+        val destino = EstadoSolicitud.desdeDescripcion(nuevoEstado)
+
+        if (destino == null) {
+            onResultado("El estado seleccionado no es válido")
+            return
+        }
+
+        if (comentario.isBlank()) {
+            onResultado("Debes escribir un comentario sobre el trabajo realizado")
+            return
+        }
+
+        if (username.isBlank()) {
+            onResultado("No se pudo identificar al técnico")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val solicitud = repository
+                    .obtenerSolicitudPorId(id)
+                    .first()
+
+                if (solicitud == null) {
+                    onResultado("No se encontró la solicitud")
+                    return@launch
+                }
+
+                if (solicitud.responsable != username) {
+                    onResultado("Esta solicitud no está asignada a tu usuario")
+                    return@launch
+                }
+
+                val actual = EstadoSolicitud.desdeDescripcion(solicitud.estado)
+
+                if (actual == null) {
+                    onResultado("El estado actual de la solicitud no es válido")
+                    return@launch
+                }
+
+                // El técnico no puede cancelar ni cerrar solicitudes.
+                val estadosPermitidos = actual.siguientesEstados().filter {
+                    it != EstadoSolicitud.CANCELADA &&
+                            it != EstadoSolicitud.CERRADA
+                }
+
+                if (destino !in estadosPermitidos) {
+                    onResultado(
+                        "No se permite pasar de ${actual.descripcion} a ${destino.descripcion}"
+                    )
+                    return@launch
+                }
+
+                val fechaActual = SimpleDateFormat(
+                    "dd/MM/yyyy HH:mm:ss",
+                    Locale.getDefault()
+                ).format(Date())
+
+                val evento = HistorialSolicitudEntity(
+                    solicitudId = id,
+                    estadoAnterior = actual.descripcion,
+                    estadoNuevo = destino.descripcion,
+                    accion = "Trabajo técnico",
+                    comentario = comentario.trim(),
+                    perfil = "TECNICO",
+                    usuario = username,
+                    fechaHora = fechaActual
+                )
+
+                val guardado = repository.cambiarEstadoConHistorial(
+                    id = id,
+                    estadoAnterior = actual.descripcion,
+                    estadoNuevo = destino.descripcion,
+                    evento = evento
+                )
+
+                if (guardado) {
+                    onResultado(null)
+                } else {
+                    onResultado("La solicitud cambió mientras la editabas. Vuelve a intentarlo.")
+                }
+            } catch (e: Exception) {
+                onResultado(
+                    e.message ?: "No se pudo actualizar el estado ni guardar el comentario"
+                )
+            }
+        }
+    }
+
     fun obtenerSolicitudPorId(
         id: Long
     ): kotlinx.coroutines.flow.Flow<SolicitudEntity?> {
         return repository.obtenerSolicitudPorId(id)
+    }
+
+    // Obtener solicitudes asignadas a un técnico
+    fun obtenerSolicitudesPorTecnico(
+        username: String
+    ): kotlinx.coroutines.flow.Flow<List<SolicitudEntity>> {
+        return repository.obtenerSolicitudesPorTecnico(username)
     }
 
     // Consultar el historial de una solicitud

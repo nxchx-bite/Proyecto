@@ -1,3 +1,4 @@
+
 package com.example.dsy1105_009v_2026.model
 
 data class Credential(
@@ -16,6 +17,12 @@ data class Credential(
             username = "cliente",
             password = "123",
             role = "CLIENTE"
+        )
+
+        val Tecnico = Credential(
+            username = "tecnico",
+            password = "123",
+            role = "TECNICO"
         )
     }
 }

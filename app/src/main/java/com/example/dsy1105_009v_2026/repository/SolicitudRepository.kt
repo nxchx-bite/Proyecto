@@ -30,6 +30,13 @@ class SolicitudRepository(
         return solicitudDao.obtenerTodas()
     }
 
+    // Obtener solicitudes asignadas a un técnico
+    fun obtenerSolicitudesPorTecnico(
+        username: String
+    ): Flow<List<SolicitudEntity>> {
+        return solicitudDao.obtenerPorTecnico(username)
+    }
+
     // Buscar una solicitud por su ID
     fun obtenerSolicitudPorId(
         id: Long

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -36,6 +37,7 @@ fun DrawerMenu(
 ) {
     val esAdmin = role == "ADMIN"
     val esCliente = role == "CLIENTE"
+    val esTecnico = role == "TECNICO"
 
     Column(
         modifier = Modifier
@@ -43,6 +45,7 @@ fun DrawerMenu(
             .padding(20.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+
         Text(
             text = "Gestión de solicitudes",
             style = MaterialTheme.typography.headlineMedium,
@@ -73,10 +76,10 @@ fun DrawerMenu(
                 )
 
                 Text(
-                    text = if (esAdmin) {
-                        "Administrador"
-                    } else {
-                        "Cliente"
+                    text = when {
+                        esAdmin -> "Administrador"
+                        esTecnico -> "Técnico"
+                        else -> "Cliente"
                     },
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary
@@ -95,6 +98,7 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
+        // INICIO
         NavigationDrawerItem(
             label = { Text("Inicio") },
             selected = true,
@@ -107,7 +111,9 @@ fun DrawerMenu(
             }
         )
 
+        // OPCIONES DEL CLIENTE
         if (esCliente) {
+
             NavigationDrawerItem(
                 label = { Text("Nueva solicitud") },
                 selected = false,
@@ -137,7 +143,9 @@ fun DrawerMenu(
             )
         }
 
+        // OPCIONES DEL ADMINISTRADOR
         if (esAdmin) {
+
             NavigationDrawerItem(
                 label = { Text("Gestionar solicitudes") },
                 selected = false,
@@ -153,10 +161,29 @@ fun DrawerMenu(
             )
         }
 
+        // OPCIONES DEL TÉCNICO
+        if (esTecnico) {
+
+            NavigationDrawerItem(
+                label = { Text("Mis solicitudes asignadas") },
+                selected = false,
+                onClick = {
+                    navController.navigate("solicitudesTecnico/$username")
+                },
+                icon = {
+                    Icon(
+                        Icons.Default.List,
+                        contentDescription = "Solicitudes asignadas"
+                    )
+                }
+            )
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         HorizontalDivider()
 
+        // CERRAR SESIÓN
         Button(
             onClick = {
                 navController.navigate("login") {
@@ -176,7 +203,7 @@ fun DrawerMenu(
                 contentDescription = null
             )
 
-            Spacer(modifier = Modifier.padding(start = 4.dp))
+            Spacer(modifier = Modifier.width(8.dp))
 
             Text("Cerrar sesión")
         }
