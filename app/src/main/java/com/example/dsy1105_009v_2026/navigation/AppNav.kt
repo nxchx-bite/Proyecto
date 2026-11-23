@@ -106,12 +106,15 @@ fun AppNav() {
 
             val id = backStackEntry.arguments?.getLong("id") ?: 0L
 
+
             SolicitudConfirmadaScreen(
                 solicitudId = id,
+                viewModel = solicitudViewModel,
                 onVolverInicio = {
                     navController.popBackStack()
                 }
             )
+
         }
 
         // SOLICITUDES ASIGNADAS AL TÉCNICO

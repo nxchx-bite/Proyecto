@@ -1,30 +1,153 @@
-
 package com.example.dsy1105_009v_2026.ui.screen
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+import com.example.dsy1105_009v_2026.model.MensajeWhatsAppSimulado
+import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
+
 @Composable
 fun SolicitudConfirmadaScreen(
     solicitudId: Long,
+    viewModel: SolicitudViewModel,
     onVolverInicio: () -> Unit
 ) {
+
+    // Obtener la solicitud guardada desde Room
+    val flujoSolicitud = remember(solicitudId, viewModel) {
+        viewModel.obtenerSolicitudPorId(solicitudId)
+    }
+
+    val solicitud by flujoSolicitud.collectAsState(
+        initial = null
+    )
+
+    val context = LocalContext.current
+
+    // Mostrar automáticamente el aviso por primera vez
+    var mostrarAviso by rememberSaveable(solicitudId) {
+        mutableStateOf(true)
+    }
+
+    var enlaceCopiado by remember {
+        mutableStateOf(false)
+    }
+
+    // Generar el código de seguimiento
+    val codigo = remember(solicitudId) {
+        MensajeWhatsAppSimulado.codigoSeguimiento(
+            solicitudId
+        )
+    }
+
+    // Generar enlace de demostración
+    val enlace = remember(solicitudId) {
+        MensajeWhatsAppSimulado.enlaceFicticio(
+            solicitudId
+        )
+    }
+
+    // Preparar mensaje utilizando los datos de Room
+    val mensaje = solicitud?.let { datos ->
+        MensajeWhatsAppSimulado.prepararMensaje(
+            solicitudId = datos.id,
+            titulo = datos.titulo,
+            categoria = datos.categoria
+        )
+    }
+
+    // VENTANA EMERGENTE DE WHATSAPP
+    if (mostrarAviso && solicitud != null) {
+
+        AlertDialog(
+            onDismissRequest = {
+                mostrarAviso = false
+            },
+
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            },
+
+            title = {
+                Text(
+                    text = "¡Solicitud registrada!",
+                    textAlign = TextAlign.Center
+                )
+            },
+
+            text = {
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(12.dp)
+                ) {
+
+                    Text(
+                        text = "Se envió un enlace de seguimiento " +
+                                "de tu caso a tu WhatsApp (simulación).",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    Text(
+                        text = "Código de seguimiento: $codigo",
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    Text(
+                        text = "Referencia: $enlace",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+
+
+                }
+            },
+
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mostrarAviso = false
+                    }
+                ) {
+                    Text("Entendido")
+                }
+            }
+        )
+    }
+
+    // PANTALLA DE CONFIRMACIÓN
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
@@ -35,48 +158,40 @@ fun SolicitudConfirmadaScreen(
                 defaultElevation = 3.dp
             )
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement =
+                    Arrangement.spacedBy(16.dp)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(88.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = "Solicitud registrada correctamente",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(18.dp)
-                    )
-                }
+
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
 
                 Text(
                     text = "¡Solicitud registrada!",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary
+                    textAlign = TextAlign.Center
                 )
 
                 Text(
-                    text = "Tu solicitud fue guardada correctamente. Puedes utilizar el siguiente código para consultar su seguimiento.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Tu solicitud fue guardada correctamente.",
+                    textAlign = TextAlign.Center
                 )
 
                 HorizontalDivider()
 
                 Text(
                     text = "CÓDIGO DE SEGUIMIENTO",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.titleMedium
                 )
 
                 Surface(
@@ -84,67 +199,101 @@ fun SolicitudConfirmadaScreen(
                     color = MaterialTheme.colorScheme.primaryContainer
                 ) {
                     Text(
-                        text = "SOL-${solicitudId.toString().padStart(3, '0')}",
+                        text = codigo,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(
-                            horizontal = 24.dp,
-                            vertical = 16.dp
-                        )
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Row(
-                        modifier = Modifier.padding(
-                            horizontal = 16.dp,
-                            vertical = 10.dp
-                        ),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Text(
+                    text = "Estado: Recibida"
+                )
+
+                HorizontalDivider()
+
+                Text(
+                    text = "Referencia para WhatsApp (simulado)",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                if (mensaje == null) {
+
+                    CircularProgressIndicator()
+
+                    Text("Cargando solicitud...")
+
+                } else {
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(20.dp)
-                        )
 
                         Text(
-                            text = "Estado: Recibida",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            text = mensaje,
+                            modifier = Modifier.padding(16.dp),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+
+                    // Permite abrir nuevamente la ventana
+                    Button(
+                        onClick = {
+                            mostrarAviso = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Ver aviso de WhatsApp")
+                    }
+
+                    // Copiar el enlace ficticio
+                    OutlinedButton(
+                        onClick = {
+
+                            val clipboard =
+                                context.getSystemService(
+                                    Context.CLIPBOARD_SERVICE
+                                ) as ClipboardManager
+
+                            clipboard.setPrimaryClip(
+                                ClipData.newPlainText(
+                                    "Enlace de seguimiento",
+                                    enlace
+                                )
+                            )
+
+                            enlaceCopiado = true
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Copiar enlace de seguimiento")
+                    }
+
+                    if (enlaceCopiado) {
+                        Text(
+                            text = "Enlace copiado correctamente",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
 
                 Text(
-                    text = "Guarda tu código para identificar la solicitud cuando necesites consultar sus detalles.",
+                    text = "El enlace de seguimiento fue enviado exitosamente",
                     style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    textAlign = TextAlign.Center
                 )
-
-                Spacer(modifier = Modifier.height(4.dp))
 
                 Button(
                     onClick = onVolverInicio,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
-                    shape = RoundedCornerShape(14.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "Volver al inicio",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Volver al inicio")
                 }
             }
         }
     }
 }
+
