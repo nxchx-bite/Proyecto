@@ -22,11 +22,15 @@ import com.example.dsy1105_009v_2026.model.EstadoSolicitud
 import kotlinx.coroutines.flow.first
 import com.example.dsy1105_009v_2026.model.data.local.HistorialSolicitudEntity
 
+import com.example.dsy1105_009v_2026.repository.SolicitudesRemotasRepository
+
 class SolicitudViewModel(application: Application) :
     AndroidViewModel(application) {
 
     private val _estado = MutableStateFlow(SolicitudUiState())
     val estado = _estado.asStateFlow()
+
+    private val repositoryRemoto = SolicitudesRemotasRepository()
 
     private val _guardando = MutableStateFlow(false)
     val guardando = _guardando.asStateFlow()
@@ -402,10 +406,27 @@ class SolicitudViewModel(application: Application) :
                     evidenciaUri = _estado.value.evidenciaUri
                 )
 
+                // Primero registramos en MongoDB mediante Spring Boot
+                try {
+                    repositoryRemoto.guardarEnMongoDB(
+                        titulo = solicitud.titulo,
+                        descripcion = solicitud.descripcion,
+                        categoria = solicitud.categoria
+                    )
+                } catch (e: Exception) {
+                    throw IllegalStateException(
+                        "No se pudo guardar en MongoDB. " +
+                                "Comprueba que Spring Boot esté funcionando.",
+                        e
+                    )
+                }
 
+                // Después conservamos el guardado local en Room
                 val id = repository.guardarSolicitud(solicitud)
 
+                // Finalmente navegamos a la confirmación
                 onGuardada(id)
+
             } catch (e: Exception) {
                 _errorGuardado.value =
                     e.message ?: "No se pudo guardar la solicitud"
