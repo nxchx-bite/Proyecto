@@ -22,6 +22,10 @@ import com.example.dsy1105_009v_2026.ui.screen.SolicitudesTecnicoScreen
 import com.example.dsy1105_009v_2026.view.DrawerMenu
 import com.example.dsy1105_009v_2026.ui.theme.HomeScreen
 import com.example.dsy1105_009v_2026.viewmodel.SolicitudViewModel
+import com.example.dsy1105_009v_2026.ui.home.MuestraDatosScreen
+
+import com.example.dsy1105_009v_2026.ui.screen.SolicitudesRemotasScreen
+
 
 @Composable
 fun AppNav() {
@@ -76,6 +80,40 @@ fun AppNav() {
                 }
             )
         }
+
+
+
+        composable(
+            route = "muestraDatos/{username}",
+            arguments = listOf(
+                navArgument("username") {
+                    type = NavType.StringType
+                }
+            )
+        ) { backStackEntry ->
+
+            val username =
+                backStackEntry.arguments
+                    ?.getString("username") ?: "usuario"
+
+            MuestraDatosScreen(
+                username = username,
+                navController = navController
+            )
+        }
+
+
+        // CONSULTAR SOLICITUDES DESDE SPRING BOOT
+        composable("solicitudesRemotas") {
+
+            SolicitudesRemotasScreen(
+                onVolver = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+
 
         // RESUMEN Y REGISTRO DE LA SOLICITUD
         composable("resumenSolicitud") {

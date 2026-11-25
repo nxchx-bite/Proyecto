@@ -1,6 +1,8 @@
 
 package com.example.dsy1105_009v_2026.view
 
+import android.net.Uri
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,11 +12,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.ExitToApp
+
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,10 +27,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Icon
+
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
 import androidx.navigation.NavController
 
 @Composable
@@ -35,6 +41,8 @@ fun DrawerMenu(
     role: String,
     navController: NavController
 ) {
+
+    // IDENTIFICAR EL PERFIL
     val esAdmin = role == "ADMIN"
     val esCliente = role == "CLIENTE"
     val esTecnico = role == "TECNICO"
@@ -46,6 +54,7 @@ fun DrawerMenu(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
+        // TITULO
         Text(
             text = "Gestión de solicitudes",
             style = MaterialTheme.typography.headlineMedium,
@@ -53,17 +62,22 @@ fun DrawerMenu(
             color = MaterialTheme.colorScheme.primary
         )
 
+        // INFORMACION DEL USUARIO
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor =
+                    MaterialTheme.colorScheme.primaryContainer
             )
         ) {
+
             Column(
                 modifier = Modifier.padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement =
+                    Arrangement.spacedBy(6.dp)
             ) {
+
                 Text(
                     text = "¡Bienvenido!",
                     style = MaterialTheme.typography.titleLarge,
@@ -100,7 +114,9 @@ fun DrawerMenu(
 
         // INICIO
         NavigationDrawerItem(
-            label = { Text("Inicio") },
+            label = {
+                Text("Inicio")
+            },
             selected = true,
             onClick = {},
             icon = {
@@ -111,11 +127,15 @@ fun DrawerMenu(
             }
         )
 
-        // OPCIONES DEL CLIENTE
+        // =====================================
+        // OPCIONES EXCLUSIVAS DEL CLIENTE
+        // =====================================
         if (esCliente) {
 
             NavigationDrawerItem(
-                label = { Text("Nueva solicitud") },
+                label = {
+                    Text("Nueva solicitud")
+                },
                 selected = false,
                 onClick = {
                     navController.navigate("nuevaSolicitud")
@@ -129,7 +149,9 @@ fun DrawerMenu(
             )
 
             NavigationDrawerItem(
-                label = { Text("Mis solicitudes") },
+                label = {
+                    Text("Mis solicitudes")
+                },
                 selected = false,
                 onClick = {
                     navController.navigate("misSolicitudes")
@@ -143,11 +165,15 @@ fun DrawerMenu(
             )
         }
 
-        // OPCIONES DEL ADMINISTRADOR
+        // =====================================
+        // OPCIONES EXCLUSIVAS DEL ADMINISTRADOR
+        // =====================================
         if (esAdmin) {
 
             NavigationDrawerItem(
-                label = { Text("Gestionar solicitudes") },
+                label = {
+                    Text("Gestionar solicitudes")
+                },
                 selected = false,
                 onClick = {
                     navController.navigate("gestionarSolicitudes")
@@ -159,16 +185,40 @@ fun DrawerMenu(
                     )
                 }
             )
+
+            // CONSULTAR SOLICITUDES DE MONGODB
+            // SOLO ADMINISTRADOR
+            NavigationDrawerItem(
+                label = {
+                    Text("Solicitudes MongoDB")
+                },
+                selected = false,
+                onClick = {
+                    navController.navigate("solicitudesRemotas")
+                },
+                icon = {
+                    Icon(
+                        Icons.Default.List,
+                        contentDescription = "Solicitudes MongoDB"
+                    )
+                }
+            )
         }
 
-        // OPCIONES DEL TÉCNICO
+        // =====================================
+        // OPCIONES EXCLUSIVAS DEL TECNICO
+        // =====================================
         if (esTecnico) {
 
             NavigationDrawerItem(
-                label = { Text("Mis solicitudes asignadas") },
+                label = {
+                    Text("Mis solicitudes asignadas")
+                },
                 selected = false,
                 onClick = {
-                    navController.navigate("solicitudesTecnico/$username")
+                    navController.navigate(
+                        "solicitudesTecnico/$username"
+                    )
                 },
                 icon = {
                     Icon(
@@ -179,11 +229,34 @@ fun DrawerMenu(
             )
         }
 
+        // =====================================
+        // API EXTERNA PARA TODOS LOS PERFILES
+        // =====================================
+        NavigationDrawerItem(
+            label = {
+                Text("Datos externos (API REST)")
+            },
+            selected = false,
+            onClick = {
+                navController.navigate(
+                    "muestraDatos/${Uri.encode(username)}"
+                )
+            },
+            icon = {
+                Icon(
+                    Icons.Default.List,
+                    contentDescription = "Datos externos"
+                )
+            }
+        )
+
         Spacer(modifier = Modifier.weight(1f))
 
         HorizontalDivider()
 
-        // CERRAR SESIÓN
+        // =====================================
+        // CERRAR SESION
+        // =====================================
         Button(
             onClick = {
                 navController.navigate("login") {
@@ -198,6 +271,7 @@ fun DrawerMenu(
                 .height(50.dp),
             shape = RoundedCornerShape(14.dp)
         ) {
+
             Icon(
                 Icons.Default.ExitToApp,
                 contentDescription = null
