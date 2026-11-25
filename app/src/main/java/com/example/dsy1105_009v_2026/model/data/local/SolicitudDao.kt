@@ -91,6 +91,55 @@ interface SolicitudDao {
         responsable: String?
     ): Int
 
+
+    // Actualizar prioridad, estado y técnico en una sola consulta
+    @Query("""
+        UPDATE solicitudes
+        SET prioridad = :prioridad,
+            estado = :estadoNuevo,
+            responsable = :responsable
+        WHERE id = :id
+          AND estado = :estadoAnterior
+    """)
+    suspend fun actualizarGestionLocal(
+        id: Long,
+        estadoAnterior: String,
+        estadoNuevo: String,
+        prioridad: String,
+        responsable: String?
+    ): Int
+
+    // Guardar los cambios y el historial en una transacción
+    @Transaction
+    suspend fun guardarGestionConHistorial(
+        id: Long,
+        estadoAnterior: String,
+        estadoNuevo: String,
+        prioridad: String,
+        responsable: String?,
+        evento: HistorialSolicitudEntity?
+    ): Boolean {
+
+        val filas = actualizarGestionLocal(
+            id = id,
+            estadoAnterior = estadoAnterior,
+            estadoNuevo = estadoNuevo,
+            prioridad = prioridad,
+            responsable = responsable
+        )
+
+        if (filas != 1) {
+            return false
+        }
+
+        if (evento != null) {
+            insertarEventoHistorial(evento)
+        }
+
+        return true
+    }
+
+
     // Insertar un evento de historial
     @Insert
     suspend fun insertarEventoHistorial(

@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SolicitudEntity::class,
         HistorialSolicitudEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class SolicitudDatabase : RoomDatabase() {
@@ -39,6 +39,16 @@ abstract class SolicitudDatabase : RoomDatabase() {
                 )
             }
         }
+
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE solicitudes ADD COLUMN mongoId TEXT"
+                )
+            }
+        }
+
 
         // NUEVA MIGRACION: TABLA DE HISTORIAL
         private val MIGRATION_2_3 = object : Migration(2, 3) {
@@ -81,10 +91,13 @@ abstract class SolicitudDatabase : RoomDatabase() {
                     SolicitudDatabase::class.java,
                     "solicitud_database"
                 )
+
                     .addMigrations(
                         MIGRATION_1_2,
-                        MIGRATION_2_3
+                        MIGRATION_2_3,
+                        MIGRATION_3_4
                     )
+
                     .build()
 
                 INSTANCE = instancia

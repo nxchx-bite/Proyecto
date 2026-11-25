@@ -435,57 +435,55 @@ fun GestionSolicitudesScreen(
                     }
                 }
 
+
                 Button(
                     onClick = {
+
                         mensaje = null
                         guardando = true
 
-                        viewModel.cambiarPrioridad(
+                        // Guardar los cambios en MongoDB y Room
+                        viewModel.guardarCambiosAdministracion(
                             id = solicitudSeleccionada.id,
-                            nuevaPrioridad = prioridad
-                        ) { errorPrioridad ->
-                            if (errorPrioridad != null) {
-                                mensaje = errorPrioridad
-                                guardando = false
-                            } else {
-                                viewModel.cambiarEstado(
-                                    id = solicitudSeleccionada.id,
-                                    nuevoEstado = estado
-                                ) { errorEstado ->
-                                    if (errorEstado != null) {
-                                        mensaje = errorEstado
-                                        guardando = false
-                                    } else {
-                                        viewModel.asignarTecnico(
-                                            id = solicitudSeleccionada.id,
-                                            responsable = responsable
-                                        ) { errorResponsable ->
-                                            mensaje = errorResponsable
-                                                ?: "Cambios guardados correctamente."
-                                            guardando = false
-                                        }
-                                    }
-                                }
-                            }
+                            nuevaPrioridad = prioridad,
+                            nuevoEstado = estado,
+                            nuevoResponsable = responsable
+                        ) { error ->
+
+                            mensaje = error
+                                ?: "Cambios guardados correctamente."
+
+                            guardando = false
                         }
                     },
+
                     enabled = !guardando,
+
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
+
                     shape = RoundedCornerShape(14.dp)
+
                 ) {
+
                     if (guardando) {
+
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp
                         )
+
                         Spacer(modifier = Modifier.width(10.dp))
+
                         Text("Guardando cambios...")
+
                     } else {
+
                         Text("Guardar cambios")
                     }
                 }
+
 
                 // ELIMINAR SOLICITUD (solo aparece al administrar una solicitud)
                 Button(

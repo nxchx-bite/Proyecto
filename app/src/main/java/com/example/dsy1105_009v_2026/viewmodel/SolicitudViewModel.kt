@@ -270,6 +270,175 @@ class SolicitudViewModel(application: Application) :
         return repository.obtenerHistorial(solicitudId)
     }
 
+
+    fun guardarCambiosAdministracion(
+        id: Long,
+        nuevaPrioridad: String,
+        nuevoEstado: String,
+        nuevoResponsable: String,
+        onResultado: (String?) -> Unit
+    ) {
+
+        // Validar la prioridad seleccionada
+        if (nuevaPrioridad !in listOf("Baja", "Media", "Alta")) {
+            onResultado("La prioridad seleccionada no es válida")
+            return
+        }
+
+        // Validar el estado seleccionado
+        val destino = EstadoSolicitud.desdeDescripcion(nuevoEstado)
+
+        if (destino == null) {
+            onResultado("El estado seleccionado no es válido")
+            return
+        }
+
+        viewModelScope.launch {
+
+            var remotoGuardado = false
+
+            try {
+                // 1. Buscar la solicitud local
+                val solicitud = repository
+                    .obtenerSolicitudPorId(id)
+                    .first()
+
+                if (solicitud == null) {
+                    onResultado("No se encontró la solicitud")
+                    return@launch
+                }
+
+                // 2. Comprobar el estado anterior
+                val actual = EstadoSolicitud.desdeDescripcion(
+                    solicitud.estado
+                )
+
+                if (actual == null) {
+                    onResultado("El estado actual no es válido")
+                    return@launch
+                }
+
+                // 3. Validar la transición de estado
+                if (
+                    actual != destino &&
+                    destino !in actual.siguientesEstados()
+                ) {
+                    onResultado(
+                        "No se permite pasar de " +
+                                "${actual.descripcion} a ${destino.descripcion}"
+                    )
+                    return@launch
+                }
+
+                // 4. Recuperar el ID remoto
+                val mongoId = solicitud.mongoId
+
+                if (mongoId.isNullOrBlank()) {
+                    onResultado(
+                        "Esta solicitud no está vinculada a MongoDB. " +
+                                "Registra una solicitud nueva para probar el PUT."
+                    )
+                    return@launch
+                }
+
+                // 5. Preparar el nombre del técnico
+                val responsable = nuevoResponsable
+                    .trim()
+                    .ifBlank { null }
+
+                // 6. Comprobar si realmente hubo cambios
+                if (
+                    solicitud.prioridad == nuevaPrioridad &&
+                    solicitud.estado == nuevoEstado &&
+                    solicitud.responsable == responsable
+                ) {
+                    onResultado(null)
+                    return@launch
+                }
+
+                // 7. Actualizar primero MongoDB
+                repositoryRemoto.actualizarGestion(
+                    mongoId = mongoId,
+                    estado = nuevoEstado,
+                    prioridad = nuevaPrioridad,
+                    responsable = responsable
+                )
+
+                remotoGuardado = true
+
+                // 8. Crear historial solamente si cambió el estado
+                val evento = if (actual != destino) {
+
+                    val fechaActual = SimpleDateFormat(
+                        "dd/MM/yyyy HH:mm:ss",
+                        Locale.getDefault()
+                    ).format(Date())
+
+                    HistorialSolicitudEntity(
+                        solicitudId = id,
+                        estadoAnterior = actual.descripcion,
+                        estadoNuevo = destino.descripcion,
+                        accion = "Cambio de estado",
+                        comentario = "Se actualizó el estado de la solicitud.",
+                        perfil = "ADMINISTRADOR",
+                        usuario = "Administrador (simulado)",
+                        fechaHora = fechaActual
+                    )
+
+                } else {
+                    null
+                }
+
+                // 9. Actualizar Room y su historial
+                val localGuardado =
+                    repository.guardarGestionConHistorial(
+                        id = id,
+                        estadoAnterior = solicitud.estado,
+                        estadoNuevo = nuevoEstado,
+                        prioridad = nuevaPrioridad,
+                        responsable = responsable,
+                        evento = evento
+                    )
+
+                // 10. Comunicar el resultado a la pantalla
+                if (localGuardado) {
+
+                    onResultado(null)
+
+                } else {
+
+                    onResultado(
+                        "MongoDB se actualizó, pero Room no pudo " +
+                                "guardar los cambios. Revisa la sincronización."
+                    )
+                }
+
+            } catch (e: Exception) {
+
+                android.util.Log.e(
+                    "AdminPUT",
+                    "Error al guardar cambios administrativos",
+                    e
+                )
+
+                if (remotoGuardado) {
+
+                    onResultado(
+                        "MongoDB se actualizó, pero Room falló."
+                    )
+
+                } else {
+
+                    onResultado(
+                        "No se pudieron guardar cambios en MongoDB: " +
+                                (e.message ?: "Error de conexión")
+                    )
+                }
+            }
+        }
+    }
+
+
     fun cambiarPrioridad(
         id: Long,
         nuevaPrioridad: String,
@@ -388,12 +557,16 @@ class SolicitudViewModel(application: Application) :
             }
         }
     }
+
     fun guardarSolicitud(onGuardada: (Long) -> Unit) {
+
         viewModelScope.launch {
+
             try {
                 _guardando.value = true
                 _errorGuardado.value = null
 
+                // 1. Preparar los datos de la solicitud
                 val solicitud = SolicitudEntity(
                     titulo = _estado.value.titulo,
                     descripcion = _estado.value.descripcion,
@@ -406,35 +579,42 @@ class SolicitudViewModel(application: Application) :
                     evidenciaUri = _estado.value.evidenciaUri
                 )
 
-                // Primero registramos en MongoDB mediante Spring Boot
-                try {
-                    repositoryRemoto.guardarEnMongoDB(
-                        titulo = solicitud.titulo,
-                        descripcion = solicitud.descripcion,
-                        categoria = solicitud.categoria
-                    )
-                } catch (e: Exception) {
+                // 2. Guardar en MongoDB mediante POST
+                val remota = repositoryRemoto.guardarEnMongoDB(
+                    titulo = solicitud.titulo,
+                    descripcion = solicitud.descripcion,
+                    categoria = solicitud.categoria
+                )
+
+                // 3. Verificar que MongoDB devolvió su ID
+                if (remota.id.isBlank()) {
                     throw IllegalStateException(
-                        "No se pudo guardar en MongoDB. " +
-                                "Comprueba que Spring Boot esté funcionando.",
-                        e
+                        "MongoDB no devolvió el identificador"
                     )
                 }
 
-                // Después conservamos el guardado local en Room
-                val id = repository.guardarSolicitud(solicitud)
+                // 4. Guardar en Room con el ID de MongoDB
+                val idLocal = repository.guardarSolicitud(
+                    solicitud.copy(
+                        mongoId = remota.id
+                    )
+                )
 
-                // Finalmente navegamos a la confirmación
-                onGuardada(id)
+                // 5. Mostrar la confirmación
+                onGuardada(idLocal)
 
             } catch (e: Exception) {
+
                 _errorGuardado.value =
                     e.message ?: "No se pudo guardar la solicitud"
+
             } finally {
+
                 _guardando.value = false
             }
         }
     }
+
 
 
     // Eliminar solicitud desde la administración

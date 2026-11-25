@@ -1,4 +1,3 @@
-
 package com.example.dsy1105_009v_2026.model.data.local
 
 import androidx.room.Entity
@@ -6,6 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "solicitudes")
 data class SolicitudEntity(
+
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
@@ -16,9 +16,10 @@ data class SolicitudEntity(
     val fechaCreacion: String,
     val evidenciaUri: String? = null,
 
-    // Nuevos datos para la gestión administrativa
     val prioridad: String = "Media",
-    val responsable: String? = null
+    val responsable: String? = null,
 
-
+    // Identificador del documento en MongoDB
+    val mongoId: String? = null
 )
+

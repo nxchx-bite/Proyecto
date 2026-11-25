@@ -114,6 +114,29 @@ class SolicitudRepository(
         )
     }
 
+
+    // Guardar cambios administrativos en Room
+    // junto con el historial si cambió el estado
+    suspend fun guardarGestionConHistorial(
+        id: Long,
+        estadoAnterior: String,
+        estadoNuevo: String,
+        prioridad: String,
+        responsable: String?,
+        evento: HistorialSolicitudEntity?
+    ): Boolean {
+
+        return solicitudDao.guardarGestionConHistorial(
+            id = id,
+            estadoAnterior = estadoAnterior,
+            estadoNuevo = estadoNuevo,
+            prioridad = prioridad,
+            responsable = responsable,
+            evento = evento
+        )
+    }
+
+
     // Obtener el historial de una solicitud desde Room
     fun obtenerHistorial(
         solicitudId: Long

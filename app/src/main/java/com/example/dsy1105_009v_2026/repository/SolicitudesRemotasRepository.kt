@@ -1,6 +1,8 @@
+
 package com.example.dsy1105_009v_2026.repository
 
 import com.example.dsy1105_009v_2026.data.remote.SolicitudesRemotasRetrofit
+import com.example.dsy1105_009v_2026.model.ActualizarGestionRemotaRequest
 import com.example.dsy1105_009v_2026.model.CrearSolicitudRemotaRequest
 import com.example.dsy1105_009v_2026.model.SolicitudRemota
 
@@ -11,22 +13,41 @@ class SolicitudesRemotasRepository {
         return SolicitudesRemotasRetrofit.api.obtenerSolicitudes()
     }
 
-    // Registrar una solicitud en MongoDB
+    // Crear solicitud en MongoDB
     suspend fun guardarEnMongoDB(
         titulo: String,
         descripcion: String,
         categoria: String
     ): SolicitudRemota {
 
-        val solicitud = CrearSolicitudRemotaRequest(
+        val datos = CrearSolicitudRemotaRequest(
             titulo = titulo,
             descripcion = descripcion,
             categoria = categoria
         )
 
-        return SolicitudesRemotasRetrofit.api.crearSolicitud(
-            solicitud
+        return SolicitudesRemotasRetrofit.api.crearSolicitud(datos)
+    }
+
+    // Actualizar una solicitud en MongoDB
+    suspend fun actualizarGestion(
+        mongoId: String,
+        estado: String,
+        prioridad: String,
+        responsable: String?
+    ): SolicitudRemota {
+
+        val datos = ActualizarGestionRemotaRequest(
+            estado = estado,
+            prioridad = prioridad,
+            responsable = responsable
+        )
+
+        return SolicitudesRemotasRetrofit.api.actualizarGestion(
+            id = mongoId,
+            datos = datos
         )
     }
 }
+
 
