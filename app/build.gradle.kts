@@ -63,6 +63,11 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")  // <-- ESTA LÍNEA ES LA CLAVE
 
 
+    // Consumo de API REST
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+
 
     // Dependencias para Iconos instalar
 
